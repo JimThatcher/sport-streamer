@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=1200 height=105">
+    <!--meta http-equiv="refresh" content="2"/-->
+    <style type="text/css">
+        body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }
+        .scoreBug { position: relative; }
+        .scoreCanvas { position: absolute; }
+        body.hide {
+            opacity: 0;
+            transition-duration: 0.9s;
+            transition-property: opacity;
+        }
+        body.show {
+            opacity: 1;
+            transition-duration: 0.8s;
+            transition-property: opacity;
+        }
+    </style>
+</head>
+<title>Scoreboard</title>
+<body>
+    <div class="scoreBug">
+        <div style="position: absolute; top: 917px; left: 727px; width: 461px; height: 25px;">
+            <canvas id="timeoutCanvas" width="461" height="25" style="border:1px solid #00000000;"></canvas>
+        </div>
+        <div style="position: absolute; top: 917px; left: 1206px; width: 120px; height: 25px;">
+            <canvas id="flagCanvas" width="120" height="25" style="border:1px solid #00000000;"></canvas>
+        </div>
+        <div style="position: absolute; top: 940px; left: 475px; width: 1120px; height: 80px;">
+            <canvas id="scoreCanvas" width="1120" height="80" style="border:1px solid #00000000;"></canvas>
+        </div>
+    </div>
+
+    <script>
+        function ordinal(n) {
+            var s = ["th", "st", "nd", "rd"];
+            var v = n%100;
+            return n + (s[(v-20)%10] || s[v] || s[0]);
+        }
+        function loadData() {
+            fetch('../api/score', {cache: "no-store"})
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                fetch('../api/clock', {cache: "no-store"})
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (clockData) {
+                    var periodLoc = clockData["Clk"].lastIndexOf(".");
+                    var resultStr = "";
+                    if (periodLoc > 1) {
+                        resultStr = clockData["Clk"].substring(0, periodLoc).trim();
+                    }
+                    else {
+                        resultStr = clockData["Clk"].trim();
+                    }
+                    clock(resultStr);
+                    quarter(ordinal(data["Pd"]));
+                });
+                if (data["Dn"] && data["Dt"]) {
+                    downAndDistance(data["Dn"], data["Dt"]);
+                }
+                scores(data["Hs"], data["Gs"]);
+                if (data["Hpo"] && data["Gpo"]) {
+                    showPossession(data["Hpo"], data["Gpo"]);
+                }
+                if (data["Htol"] && data["Gtol"]) {
+                    timeOuts(data["Htol"], data["Gtol"]);
+                }
+                if (data["Fl"]) {
+                        throwFlag(data["Fl"]);
+                }
+                if (data["Hto"] && data["Gto"]) {
+                    var homeTO = (data["Hto"]);
+                    var guestTO = (data["Gto"]);
+                    showTimeOut(homeTO, guestTO);
+                }
+            })
+            .catch(function (err) {
+                console.log('error: ' + err);
+            })
+        };
+
+        function throwFlag(flag) {
+            var c = document.getElementById("flagCanvas");
+            var ctx = c.getContext("2d");
+            ctx.clearRect(0,0,120,25);
+            if (flag) {
+                ctx.fillStyle = "yellow";
+                ctx.fillRect(0, 0, 120, 25);
+                ctx.font = "italic 16pt Segoe UI Black";
+                ctx.fillStyle = "black";
+                ctx.fillText("FLAG", 60 - (ctx.measureText("FLAG").width/2), 21);
+            }
+        };
+
+        function showTimeOut(home, guest) {
+            var x = (home) ? 0 : 361;
+            var c = document.getElementById("timeoutCanvas");
+            var ctx = c.getContext("2d");
+            ctx.clearRect(0,0,461,25);
+            ctx.fillStyle = "yellow";
+            if (home || guest) {
+                ctx.fillRect(x, 0, 100, 25);
+                ctx.font = "italic 15pt Segoe UI Semibold";
+                ctx.fillStyle = "black";
+                ctx.fillText("TIME OUT", x + 50 - (ctx.measureText("TIME OUT").width/2), 22);
+            }
+        };
+
+        function timeOuts(home, guest) {
+            var c = document.getElementById("scoreCanvas");
+            var ctx = c.getContext("2d");
+            noTO = "#525252ff";
+            hasTO = "#ffff00ff";
+            ctx.lineWidth = 8;
+            ctx.lineCap = "round";
+            var start = 0;
+            var end = 145;
+            for (let i=1; i<=3; i++) {
+                ctx.strokeStyle = (home >= i) ? hasTO : noTO;
+                start = end + 15;
+                end = start + 10;
+                ctx.beginPath();
+                ctx.moveTo(start, 63);
+                ctx.lineTo(end, 63);
+                ctx.stroke();
+            }
+            end = 506;
+            for (let i=1; i<=3; i++) {
+                ctx.strokeStyle = (guest >= i) ? hasTO : noTO;
+                start = end + 15;
+                end = start + 10;
+                ctx.beginPath();
+                ctx.moveTo(start, 63);
+                ctx.lineTo(end, 63);
+                ctx.stroke();
+            }
+        }
+
+        function showPossession(home, guest) {
+            console.log("showPossession", home, guest);
+            var c = document.getElementById("scoreCanvas");
+            var ctx = c.getContext("2d");
+            noPoss = "#52525200";
+            hasPoss = "yellow";
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = (home) ? hasPoss : noPoss;
+            ctx.strokeRect(254, 3, 98, 73);
+            ctx.strokeStyle = (guest) ? hasPoss : noPoss;
+            ctx.strokeRect(615, 3, 98, 73);
+        }
+
+        function scores(homeScore, guestScore) {
+            console.log("Drawing scores ", homeScore, guestScore);
+            var c = document.getElementById("scoreCanvas");
+            var ctx = c.getContext("2d");
+            ctx.clearRect(253, 2, 100, 75);
+            ctx.clearRect(614, 2, 100, 75);
+            ctx.fillStyle = "#525252cc";
+            ctx.fillRect(253, 2, 100, 75); // Home score background
+            ctx.fillRect(614, 2, 100, 75); // guest score background
+            ctx.font = "52pt Segoe UI Black";
+            ctx.fillStyle = "white";
+            ctx.fillText(homeScore, 303 - (ctx.measureText(homeScore).width/2), 65);
+            ctx.fillText(guestScore, 662 - (ctx.measureText(guestScore).width/2), 65);
+        }
+
+        function clock(clock) {
+            var c = document.getElementById("scoreCanvas");
+            var ctx = c.getContext("2d");
+            ctx.clearRect(731, 39, 120, 38);
+            ctx.fillStyle = "#282828cc";
+            ctx.fillRect(731, 39, 120, 38); // Period/Time background
+            ctx.font = "24pt Segoe UI Semibold";
+            if (clock != 0) {
+                ctx.fillStyle = "white";
+                ctx.fillText(clock, 791 - (ctx.measureText(clock).width/2), 70);
+            }
+        }
+
+        function quarter(quarter) {
+            var c = document.getElementById("scoreCanvas");
+            var ctx = c.getContext("2d");
+            ctx.clearRect(731, 2, 120, 38);
+            ctx.fillStyle = "#282828cc";
+            ctx.fillRect(731, 2, 120, 38); // Period/Time background
+            ctx.font = "24pt Segoe UI Semibold";
+            ctx.fillStyle = "yellow";
+            ctx.fillText(quarter, 791 - (ctx.measureText(quarter).width/2), 35);
+        }
+
+        function downAndDistance(down, distance) {
+            // If there is data in the Down, draw the background and write the data
+            console.log("Drawing down and distance ", down, distance);
+            var c = document.getElementById("scoreCanvas");
+            var ctx = c.getContext("2d");
+            ctx.clearRect(858, 2, 220, 75);
+            // Down-Distance BG - Only fill if 'Down' != "   "
+            if (down > 0) {
+                if (!hasDnD) {
+                    hasDnD = true;
+                    ctx.fillStyle = "#30303080";
+                    ctx.fillRect(851, 2, 7, 75);
+                }
+                ctx.fillStyle = "#2f2f2f99";
+                ctx.fillRect(858, 2, 220, 75);
+                ctx.font = "40px Segoe UI Semibold";
+                ctx.fillStyle = "yellow";
+                var distTxt = (distance > 0) ? ' & ' + distance : ' DOWN';
+                dndTxt = ordinal(down) + distTxt;
+                ctx.fillText(dndTxt, 968 - (ctx.measureText(dndTxt).width/2), 54);
+            }
+            if (down <= 0 && hasDnD)
+            {
+                hasDnD = false;
+                ctx.clearRect(851, 2, 7, 75);
+            }
+        };
+
+        function setupScoreboard() {
+            // Draw the basic background for the scoreboard
+            var c = document.getElementById("scoreCanvas");
+            var ctx = c.getContext("2d");
+            ctx.fillStyle = "#30303080";
+            ctx.fillRect(30, 2, 821, 75); // Main background
+            ctx.fillStyle = "#525252cc";
+            ctx.fillRect(253, 2, 100, 75); // Home score background
+            ctx.fillRect(614, 2, 100, 75); // guest score background
+            ctx.fillStyle = "#282828cc";
+            ctx.fillRect(731, 2, 120, 75); // Period/Time background
+        };
+
+        function parseQuery(queryString) {
+            var query = {};
+            var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
+            for (var i = 0; i < pairs.length; i++) {
+                var pair = pairs[i].split('=');
+                query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+            }
+            return query;
+        };
+
+        function showScoreboard() {
+            document.body.classList.remove('hide');
+            document.body.classList.add('show');
+        }
+
+        function hideScoreboard() {
+            document.body.classList.remove('show');
+            document.body.classList.add('hide');
+        };
+
+        function setupGame() {
+            // Read the game configuration and draw the game static data
+            const queryStr = window.location.search;
+            queryParms = parseQuery(queryStr);
+            var gameToShow = (queryParms['game']) ? queryParms['game'] : 'next';
+            console.log(gameToShow);
+            fetch('../rest/db/game/' + gameToShow)
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                console.log(data);
+                homeIcon.src = '../Images/' + data["homeIcon"];
+                guestIcon.src = '../Images/' + data["guestIcon"];
+                homeName = data["homeName"].toUpperCase();
+                guestName = data["guestName"].toUpperCase();
+                var c = document.getElementById("scoreCanvas");
+                var ctx = c.getContext("2d");
+                ctx.fillStyle = data["homeColor"];
+                ctx.fillRect(30, 2, 223, 75);
+                ctx.fillStyle = data["guestColor"];
+                ctx.fillRect(391, 2, 223, 75);
+                ctx.font = "16px Segoe UI Black";
+                ctx.fillStyle = "white";
+                if (data["homeRecord"] && data["homeRecord"] != "") {
+                    ctx.fillText(data["homeRecord"], 110, 68); 
+                }
+                if (data["guestRecord"] && data["guestRecord"] != "") {
+                    ctx.fillText(data["guestRecord"], 471, 68); 
+                }
+            })
+            .catch(function (err) {
+                console.log('error: ' + err);
+            })
+        };
+
+        function writeNames() {
+            // Write the team names on top of logos
+            var c = document.getElementById("scoreCanvas");
+            var ctx = c.getContext("2d");
+            ctx.font = "36px Segoe UI Semibold";
+            ctx.fillStyle = "white";
+            ctx.fillText(homeName, 247 - ctx.measureText(homeName).width, 50);
+            ctx.fillText(guestName, 608 - ctx.measureText(guestName).width, 50);
+        }
+
+        var queryParms = {};
+        var homeIcon = new Image();
+        var guestIcon = new Image();
+        var hasDnD = false;
+        var homeName = "";
+        var guestName = "";
+        var homeTO = false;
+        var guestTO = false;
+        var flagState = false;
+        homeIcon.onload = function() {
+            var c = document.getElementById("scoreCanvas");
+            var ctx = c.getContext("2d");
+            var x = (homeIcon.width > homeIcon.height) ? ((homeIcon.width - homeIcon.height)/2) : 0;
+            var y = 0;
+            var xClip = (homeIcon.height < homeIcon.width) ? homeIcon.height : homeIcon.width;
+            var yClip = homeIcon.height;
+            ctx.drawImage(homeIcon, x, y, xClip, yClip, 32 - (35 * (xClip/yClip)), 1, 78, 78);
+        }
+        guestIcon.onload = function() {
+            var c = document.getElementById("scoreCanvas");
+            var ctx = c.getContext("2d");
+            var x = (guestIcon.width > guestIcon.height) ? ((guestIcon.width - guestIcon.height)/2) : 0;
+            var y = 0;
+            var xClip = (guestIcon.height < guestIcon.width) ? guestIcon.height : guestIcon.width;
+            var yClip = guestIcon.height;
+            ctx.drawImage(guestIcon, x, y, xClip, yClip, 393 - (35 * (xClip/yClip)), 1, 78, 78);
+            writeNames();
+        }
+        setupScoreboard();
+        setupGame();
+        if (!!window.EventSource) {
+            var source = new EventSource('../events');
+            source.addEventListener('open', function(e) {
+                console.log("Events Connected");
+            }, false);
+
+            source.addEventListener('error', function(e) {
+                if (e.target.readyState != EventSource.OPEN) {
+                    console.log("Events Disconnected");
+                }
+            }, false);
+
+            source.addEventListener('score', function(e) {
+                console.log("score update", e.data);
+                var data = JSON.parse(e.data);
+                downAndDistance(data["Dn"], data["Dt"]);
+                quarter(ordinal(data["Pd"]));
+                scores(data["Hs"], data["Gs"]);
+                showPossession(data["Hpo"], data["Gpo"]);
+                timeOuts(data["Htol"], data["Gtol"]);
+                if (data["Fl"] != flagState) {
+                    flagState = data["Fl"];
+                    throwFlag(data["Fl"]);
+                }
+                if (data["Hto"] != homeTO || data["Gto"] != guestTO) {
+                    homeTO = (data["Hto"]);
+                    guestTO = (data["Gto"]);
+                    showTimeOut(homeTO, guestTO);
+                }
+            }, false);
+            source.addEventListener('clock', function(e) {
+                console.log("clock update", e.data);
+                var clockJson = JSON.parse(e.data);
+                if (clockJson["Clk"]) {
+                    var periodLoc = clockJson["Clk"].lastIndexOf(".");
+                    var resultStr = "";
+                    if (periodLoc > 1) {
+                        resultStr = clockJson["Clk"].substring(0, periodLoc).trim();
+                    }
+                    else {
+                        resultStr = clockJson["Clk"].trim();
+                    }
+                    clock(resultStr);
+                }
+            }, false);
+            source.addEventListener('scoreboard', function(e) {
+                console.log("Show scoreboard ", e.data);
+                var data = JSON.parse(e.data);
+                if (data.id == 1) {
+                    showScoreboard();
+                } else {
+                    hideScoreboard();
+                }
+            }, false);
+            source.addEventListener('hideScoreboard', function(e) {
+                console.log("Hide scoreboard");
+                hideScoreboard();
+            }, false);
+        } else {
+            setInterval( function () { loadData(); }, 500);
+        }
+    </script>
+</body>
+</html>

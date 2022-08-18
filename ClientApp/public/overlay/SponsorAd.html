@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=1920 height=1080">
+    <style type="text/css">
+        body { 
+            background-color: rgba(0, 0, 0, 0); 
+            margin: 0px auto; 
+            overflow: hidden;
+        }
+        body.hide {
+            opacity: 0;
+            transition-duration: 0.9s;
+            transition-property: opacity;
+        }
+        body.show {
+            opacity: 1;
+            transition-duration: 0.8s;
+            transition-property: opacity;
+        }
+      </style>
+</head>
+<title>Sponsor (Large format)</title>
+<body>
+    <div>
+        <div style="position: absolute; top: 0px; left: 0px; width: 1920px; height: 1080px;">
+            <canvas id="imgCanvas" width="1920" height="1080" style="border:1px solid #00000000;"></canvas>
+        </div>
+    </div>
+    <script src="../js/perspective.js"></script>
+    <script>
+      // Modify these variables to customize your sponsor overlay. Your bgFile should be a 1920x1080 png file with a transparent 
+      // background and any custom common background your sponsor images will be placed on. The sponsor image should be a 
+      // png with an aspect ratio that matches the area on the background where the image will be positioned. The sponsor image
+      // will have its 3D perspective transformed to fit in the coordinates provided in sponsorTopLeft, sponsorTopRight,
+      // sponsorBottomLeft, and sponsorBottomRight. If you are using a standard flat/front-facing perspective your x,y coordinates
+      // should have the same y coordinates for sponsorTopLeft and sponsorTopRight and sponsorBottomLeft and sponsorBottomRight, and
+      // the same x coordinates for sponsorTopLeft and sponsorBottomLeft, and sponsorTopRight and sponsorBottomRight. The bgFile and
+      // sponsor image are composed into your intended overlay for that sponsor. For example, you may want every sponsor graphic to 
+      // be superimposed over a photo of your team's in-stadium jumbotron that includes your team graphics. Create a 1920x1080
+      // graphic using that photo with the background removed (transparent), and save that image as your bgFile. Note the x,y
+      // coordinates of the portion of the jumbotron that shows videos and images in the stadium and insert those values below. 
+      // The two images will be combined when a sponsor is displayed so that the sponsor image will
+      // be superimposed over the jumbotron, transformed to fit the coordinates provided.
+
+        var bgFile = "sponsorBg.png";
+
+        var sponsorImage = new Image();
+        var sponsorTopLeft = [38, 295];
+        var sponsorTopRight = [655, 476];
+        var sponsorBottomLeft = [46, 778];
+        var sponsorBottomRight = [656, 771];
+        var sponsorBackground = new Image();
+        var sponsorImgFile = '';
+        var imagePath = './Images/';
+        var isChanged = false;
+        var c = document.getElementById("imgCanvas");
+
+        function showSponsor(imgPath) {
+            if (imgPath) {
+                if (String(imgPath) != String(sponsorImgFile)) {
+                    console.log("Sponsor image: " + imgPath + ", was " + sponsorImgFile);
+                    sponsorImgFile = imgPath;
+                    var ctx = c.getContext("2d");
+                    ctx.clearRect(0, 0, c.width, c.height);
+                    sponsorBackground.src = imagePath + bgFile;
+                }
+            }
+        }
+
+        function clearImage() {
+            sponsorNum = 0;
+            sponsorName = '';
+            sponsorImgFile = '';
+            document.body.classList.remove('show');
+            document.body.classList.add('hide');
+        };
+
+        sponsorBackground.onload = function() {
+          // var c = document.getElementById("imgCanvas");
+          var ctx = c.getContext("2d");
+          ctx.drawImage(sponsorBackground, 0, 0);
+          sponsorImage.src = imagePath + sponsorImgFile;
+          document.body.classList.remove('hide');
+          document.body.classList.add('show');
+          console.log("Sponsor background: " + sponsorBackground.src + " loaded");
+        }
+
+        sponsorImage.onload = function() {
+          // c.width = sponsorImage.width;
+          // c.height = sponsorImage.height;
+          var ctx = c.getContext("2d");
+          console.log("Sponsor image: " + sponsorImgFile + " loaded");
+          var p = new Perspective(ctx, sponsorImage);
+          // p.draw([[38, 295], [655, 476], [656, 771], [46, 778]]);
+          p.draw([
+                        sponsorTopLeft,
+                        sponsorTopRight,
+                        sponsorBottomRight,
+                        sponsorBottomLeft
+                ]);
+        }
+
+        if (!!window.EventSource) {
+            var source = new EventSource('../events');
+            source.addEventListener('open', function(e) {
+                console.log("Events Connected");
+            }, false);
+
+            source.addEventListener('error', function(e) {
+                if (e.target.readyState != EventSource.OPEN) {
+                    console.log("Events Disconnected");
+                }
+            }, false);
+
+            source.addEventListener('ad', function(e) {
+                console.log("Show ad ", e.data);
+                var data = JSON.parse(e.data);
+                if (data.id == 0) {
+                    clearImage();
+                } else {
+                    showSponsor(data["image"]);
+                }
+            }, false);
+        }
+    </script>
+</body>
+</html>

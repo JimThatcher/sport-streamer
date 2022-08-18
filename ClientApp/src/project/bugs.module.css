@@ -1,0 +1,5 @@
+nobody { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }
+.scoreBug { background-color: rgba(0, 0, 0, 0); position: relative; height: 1080px; width: 1920px; }
+.scoreCanvas { position: absolute; top: 940px; left: 475px; }
+.flagCanvas { position: absolute; top: 917px; left: 1189px; width: 135px; height: 25px; }
+.timeoutCanvas { position: absolute; top: 917px; left: 727px; width: 461px; height: 25px; }
