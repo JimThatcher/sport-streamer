@@ -63,6 +63,7 @@ namespace WebAPI
                 // app.UseSwagger();
                 // app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebAPI v1"));
             }
+            AppDomain.CurrentDomain.SetData("WebRootPath", env.WebRootPath);
 
             // app.UseHttpsRedirection();
             // Instantiate the scoreboard console connection service, and start its connection timer process

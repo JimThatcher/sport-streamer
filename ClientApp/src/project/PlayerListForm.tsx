@@ -2,6 +2,7 @@ import { FC, useContext } from 'react';
 
 import { Avatar, Button, List, ListItem, ListItemAvatar, ListItemText } from '@mui/material';
 import AddBoxIcon from '@mui/icons-material/AddBox';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 
 import { SectionContent, FormLoader, ButtonRow } from '../components';
 import { useRest } from '../utils';
@@ -23,6 +24,12 @@ const PlayerListForm: FC = () => {
     console.log("Launching add page");
     navigate("../add");
   };
+
+  const handleBulkAdd = () => {
+    console.log("Launching bulk add page");
+    navigate("../bulkadd");
+  }
+
 
   const renderPlayer = (player: PlayerData) => {
     return (
@@ -64,6 +71,9 @@ const PlayerListForm: FC = () => {
         <ButtonRow mt={1}>
           <Button startIcon={<AddBoxIcon />} variant="contained" color="primary" type="button" onClick={handleAdd}>
             Add
+          </Button>
+          <Button startIcon={<UploadFileIcon />} variant="contained" color="primary" type="button" onClick={handleBulkAdd}>
+            Bulk Add from .CSV
           </Button>
         </ButtonRow>
       </>

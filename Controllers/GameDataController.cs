@@ -106,6 +106,31 @@ namespace WebAPI.Controllers
             return CreatedAtAction(nameof(GetGameConfig), new { id = school.id }, school);
         }
 
+        // POST: rest/db/logo/{imageName}
+        // Uploads the school's logo to the server. The imageName is the name of the image file.
+        // Save the image to the server in the /Images/ directory.
+        [HttpPost("logo/{imageName}")]
+        public async Task<ActionResult> PostLogoImage(string imageName, IFormFile image)
+        {
+          if (image == null || !imageName.EndsWith(".png"))
+          {
+            return BadRequest("Invalid image type");
+          }
+          var webRootPath = (string) AppDomain.CurrentDomain.GetData("WebRootPath");
+          if (webRootPath == null)
+          {
+            return StatusCode(StatusCodes.Status500InternalServerError, "No WebRootPath found");
+          }
+          // TODO: Allow app configuration of image directory.
+          // TODO: Allow upload of multiple images.
+          var path = Path.Combine(webRootPath, "Images", imageName);
+          using (var stream = new FileStream(path, FileMode.Create))
+          {
+            await image.CopyToAsync(stream);
+          }
+          return Ok();
+        }
+
         // PUT: rest/db/school/5
         [HttpPut("school/{id}")]
         public async Task<IActionResult> PutSchool(long id, School school)

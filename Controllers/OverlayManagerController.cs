@@ -44,6 +44,31 @@ namespace WebAPI.Controllers
           return CreatedAtAction(nameof(Player), new { id = player.id }, player);
         }
 
+        // POST: rest/db/player/{imageName}
+        // Uploads the player's image to the server. The imageName is the name of the image file.
+        // Save the image to the server in the /overlay/Images/ directory.
+        [HttpPost("player/{imageName}")]
+        public async Task<ActionResult> PostPlayerImage(string imageName, IFormFile image)
+        {
+          if (image == null || !imageName.EndsWith(".png"))
+          {
+            return BadRequest("Invalid image type");
+          }
+          var webRootPath = (string) AppDomain.CurrentDomain.GetData("WebRootPath");
+          if (webRootPath == null)
+          {
+            return StatusCode(StatusCodes.Status500InternalServerError, "No WebRootPath found");
+          }
+          // TODO: Allow app configuration of image directory.
+          // TODO: Allow upload of multiple images.
+          var path = Path.Combine(webRootPath, "overlay\\Images", imageName);
+          using (var stream = new FileStream(path, FileMode.Create))
+          {
+            await image.CopyToAsync(stream);
+          }
+          return Ok();
+        }
+
         // GET: rest/db/players
         // Returns a list of all Players currently in the Players table.
         [HttpGet("players")]
@@ -196,6 +221,31 @@ namespace WebAPI.Controllers
             _context.Sponsors.Add(sponsor);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(Sponsor), new { id = sponsor.id }, sponsor);
+        }
+
+        // POST: rest/db/sponsor/{imageName}
+        // Uploads the sponsor logo image to the server. The imageName is the name of the image file.
+        // Save the image to the server in the /overlay/Images/ directory.
+        [HttpPost("sponsor/{imageName}")]
+        public async Task<ActionResult> PostSponsorImage(string imageName, IFormFile image)
+        {
+          if (image == null || !imageName.EndsWith(".png"))
+          {
+            return BadRequest("Invalid image type");
+          }
+          var webRootPath = (string) AppDomain.CurrentDomain.GetData("WebRootPath");
+          if (webRootPath == null)
+          {
+            return StatusCode(StatusCodes.Status500InternalServerError, "No WebRootPath found");
+          }
+          // TODO: Allow app configuration of image directory.
+          // TODO: Allow upload of multiple images.
+          var path = Path.Combine(webRootPath, "overlay\\Images", imageName);
+          using (var stream = new FileStream(path, FileMode.Create))
+          {
+            await image.CopyToAsync(stream);
+          }
+          return Ok();
         }
 
         // GET: rest/db/sponsors

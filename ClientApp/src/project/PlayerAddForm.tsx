@@ -57,7 +57,7 @@ const PlayerAddForm: FC = () => {
     const fileData = new FormData();
     console.log("File is %s", uploadFile?.name);
     if (uploadFile) {
-      fileData.append("File", uploadFile);
+      fileData.append("image", uploadFile);
       await axios.post("./rest/db/player/" + uploadFile.name, fileData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -65,12 +65,15 @@ const PlayerAddForm: FC = () => {
         }
       }).then(function (response) {
         if (response.status === 201) {
-          enqueueSnackbar("Logo upload successful", { variant: 'success' });
+          enqueueSnackbar("Player image upload successful", { variant: 'success' });
           setUploadFile(null);
           if (filename)
             data.image = filename;
         }
-      });
+      })
+      .catch(function (err) {
+        enqueueSnackbar("Player image upload failed", { variant: 'error' });
+      })
     }
   };
 

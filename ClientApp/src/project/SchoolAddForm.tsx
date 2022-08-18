@@ -57,7 +57,7 @@ const SchoolAddForm: FC = () => {
     const fileData = new FormData();
     console.log("File is %s", uploadFile?.name);
     if (uploadFile) {
-      fileData.append("File", uploadFile);
+      fileData.append("image", uploadFile);
       await axios.post("./rest/db/logo/" + uploadFile.name, fileData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -70,7 +70,10 @@ const SchoolAddForm: FC = () => {
           if (filename)
             data.logo = filename;
         }
-      });
+      })
+      .catch(function (err) {
+        enqueueSnackbar("Logo upload failed", { variant: 'error' });
+      })
     }
   };
 
