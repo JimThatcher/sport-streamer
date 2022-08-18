@@ -1,10 +1,10 @@
 # Ignore private files used during local development
-/ClientApp/Images/*.png
+/ClientApp/public/Images/*.png
 !Square.png
 !Circle.png
 !Triangle.png 
 !Diamond.png
-/ClientApp/overlay/Images/*.png
+/ClientApp/public/overlay/Images/*.png
 !sponsorBg.png
 !PlayerBackground.png
 !Contoso.png
