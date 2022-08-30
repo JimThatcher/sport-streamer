@@ -44,12 +44,13 @@ namespace WebAPI.Models
         {
         }
 
-        public DbSet<ScoreData>? ScoreboardData { get; set; }
+        public DbSet<DbScoreData>? ScoreboardData { get; set; }
         public DbSet<ClockData>? Clocks { get; set; }
         // In-memory cache of currently displayed player hightlight
         public DbSet<Player>? Hilight { get; set; }
         // In-memory cache of currently displayed sponsor/advertisement
         public DbSet<Sponsor>? Ad { get; set; }
+        public DbSet<ConsoleInfo>? ConsoleVersion { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseInMemoryDatabase("ScoreBoard");

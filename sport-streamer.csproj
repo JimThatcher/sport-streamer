@@ -14,6 +14,21 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <Product>Sports Streamer</Product>
+    <Company>Evans Creek Development</Company>
+    <Copyright>Copyright (c) 2022</Copyright>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <FileVersion>0.8.0.16</FileVersion>
+    <VersionMajor>0</VersionMajor>
+    <VersionMinor>8</VersionMinor>
+    <VersionBuild>17</VersionBuild>
+    <Version>$(VersionMajor).$(VersionMinor).0.$(VersionBuild)</Version>
+    <SchemaVersion>1.0.0.0</SchemaVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Lib.AspNetCore.ServerSentEvents" Version="8.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="6.0.1" />

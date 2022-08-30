@@ -207,7 +207,7 @@ const ScoreCanvas = () => {
     // Read the game configuration and draw the game static data
     // const queryStr = window.location.search;
     // queryParms = parseQuery(queryStr);
-    fetch('./rest/db/game/' + String(1))
+    fetch('./rest/db/game/' + String(15))
     .then(function (response) {
         return response.json();
     })

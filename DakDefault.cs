@@ -1,8 +1,10 @@
 using System;
 using System.Text.Json;
+using WebAPI.Models;
 
 namespace DakAccess
 {
+    /*
     public class BasicData {
         private DakDefault _fb;
         public BasicData(DakDefault fb) { _fb = fb; }
@@ -18,25 +20,23 @@ namespace DakAccess
         public string PdO { get {return _fb.PeriodOrd;}}
         public string PdTx { get {return _fb.PeriodText;}}
     }
+    */
     
     public class DakDefault : ISportData
     {
-        private int _maxOffset = 160;
-        private string _data;
-        private bool _clkUpdated = false;
-        private bool _dataUpdated = false;
-        private bool _teamsUpdated = false;
-        private string _lastTime = "";
-        private string _code = "1000";
+        protected string _data;
+        protected bool _clkUpdated = false;
+        protected bool _dataUpdated = false;
+        protected bool _teamsUpdated = false;
+        protected string _lastTime = "";
+        protected string _code = "1000";
+        protected string _sport = "Unknown";
 
-        public string GetDefaultData() {
-            return "12:0012:00   12:0012:00    s   00:00           HOME                GUEST               HOME      GUEST        0   0 3 0 0 3 3 0 0 3           11ST 1ST Quarter  ";
+        public virtual string GetDefaultData() {
+            return "12:0012:00   12:0012:00    s   00:00           HOME                GUEST               HOME      GUEST        0   0 3 0 0 3 3 0 0 3           11ST 1ST Quarter  cc                     66015000418       9:00";
         }
 
-        public int MaxDataLen() {
-            return _maxOffset;
-        }
-        public string GetSportCode() {
+        public virtual string GetSportCode() {
             return _code;
         }
 
@@ -45,48 +45,81 @@ namespace DakAccess
             _data = GetDefaultData();
         }
 
-        public void UpdateData(int dataLen, int offset, ref string data) {
+        public virtual void UpdateData(int dataLen, int offset, ref string data) {
             _data = data;
-            if (offset + dataLen > _maxOffset)
-                return;
+            // _code = data.Substring(183, 4);
+            // If the change starts at zero and extends beyond Home Score field, it's a full update
             if (offset == 0 && dataLen >= 107) {
                 _clkUpdated = true;
                 _dataUpdated = true;
                 _teamsUpdated = true;
                 _lastTime = MainClock;
             }
-            else if ((offset == 0 && _lastTime != MainClock) || (offset > 0 && offset <= 31 && (offset + dataLen >= 31))) {
+            // if it starts at zero and the clock has changed, or if the update is the timeout timer field or the play clock timer field
+            else if ((offset == 0 && _lastTime != MainClock) || (((offset > 0) && (offset <= 31)) && ((offset + dataLen) >= 31)) || offset == 200) {
                 _clkUpdated = true;
                 _lastTime = MainClock;
             }
+            // If the team names were changed
             else if (offset >= 47 && offset < 98)
                 _teamsUpdated = true;
+            // If data beyond home score field was changed
             else if (offset >= 107) {
                 _dataUpdated = true;
             }
         }
-
-        public string GetData(ref string data) {
-            _dataUpdated = false;
-            _data = data;
-            return JsonSerializer.Serialize(new BasicData(this));
-        }
-
-        public string GetClocks(ref string data) {
-            _clkUpdated = false;
-            _data = data;
-            return JsonSerializer.Serialize(new Clocks(this.MainClock, "0", this.TimeOutClock));
-        }
         public string GetTeams(ref string data) {
             _data = data;
-            return "";
+            _teamsUpdated = false;
+            return JsonSerializer.Serialize(new Teams(this.HomeTeamName, this.GuestTeamName, this.HomeTeamShort, this.GuestTeamShort));
         }
 
         public bool ClockUpdated() { return _clkUpdated; }
         public bool DataUpdated() { return _dataUpdated; }
         public bool TeamsUpdated() { return _teamsUpdated; }
+        public virtual ClockData GetClockData() {
+            ClockData _clock = new ClockData();
+            try {
+                _clock.Clk = (long) TimeSpan.Parse("0:" + MainClock).TotalSeconds * 1000;
+            } catch (Exception) {}
+            _clock.Pck = 0;
+            _clock.Id = 1;
+            _clock.isRunning = ClockIsRunning;
+            _clock.lastChange = DateTime.UtcNow;
+            _clkUpdated = false;
+            return _clock;
+        }
+        public virtual DbScoreData GetScoreData() {
+            DbScoreData _score = new DbScoreData();
+            _score.id = 1;
+            int _out = 0;
+            bool _ok = Int32.TryParse(PeriodNum, out _out);
+            _score.Pd = _ok ? _out : 0;
+            _ok = Int32.TryParse(HomeScore, out _out);
+            _score.Hs = _ok ? _out : 0;
+            _ok = Int32.TryParse(GuestScore, out _out);
+            _score.Gs = _ok ? _out : 0;
+            _ok = Int32.TryParse(HomeTOL, out _out);
+            _score.Htol = _ok ? _out : 0;
+            _ok = Int32.TryParse(GuestTOL, out _out);
+            _score.Gtol = _ok ? _out : 0;
+            _score.Hpo = false;
+            _score.Gpo = false;
+            _dataUpdated = false;
+            return _score;
+        }
+        public virtual ConsoleInfo GetConsoleInfo() {
+            ConsoleInfo _console = new ConsoleInfo();
+            _console.id = 1;
+            _console.SportCode = _code;
+            _console.Sport = _sport;
+            _console.ConsoleModel = ConsoleModel;
+            _console.FirmwareVersion = ConsoleFirmware;
+            return _console;
+        }
 
         public string MainClock { get {return _data.Substring(5, 8).Trim();}}
+        public bool ClockIsRunning { get {return (_data.Substring(27, 1) != "s") ? true : false; }}
         public string TimeOutClock { get {return _data.Substring(31, 8).TrimEnd();}}
         public string HomeTeamName { get {return _data.Substring(47, 20).TrimEnd();}}
         public string GuestTeamName { get {return _data.Substring(67, 20).TrimEnd();}}
@@ -103,6 +136,9 @@ namespace DakAccess
         public string PeriodNum { get {return _data.Substring(141, 2).TrimStart();}}
         public string PeriodOrd { get {return _data.Substring(143, 4).TrimEnd();}}
         public string PeriodText { get {return _data.Substring(147, 12).TrimEnd();}}
-        public string Dump() { return _data; }  
+        public string ConsoleModel { get {return _data.Substring(187, 4);}}
+        public string ConsoleFirmware { get {return _data.Substring(191, 3);}}
+
+        public string Dump() { return _data; }
     }
 }

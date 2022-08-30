@@ -446,7 +446,7 @@ const ScoreCanvas = () => {
         // console.log("Drawing game backgrounds");
         homeIcon.src = '/Images/' + data["HomeIcon"];
         guestIcon.src = '/Images/' + data["GuestIcon"];
-        setColors({home: data["HomeColor"] + "80", guest: data["GuestColor"] + "80"});
+        setColors({home: data["HomeColor"], guest: data["GuestColor"]});
         setRecords({home: data["HomeRecord"], guest: data["GuestRecord"]});
         setNames({home: data["HomeName"].toUpperCase(), guest: data["GuestName"].toUpperCase()});
     })

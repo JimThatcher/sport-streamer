@@ -17,7 +17,7 @@ namespace WebAPI.Controllers
         public bool IsConnected { get; set; }
     }
 
-    [Route("api/[controller]")]
+    [Route("rest/[controller]")]
     [ApiController]
     public class ConsoleController : ControllerBase
     {
@@ -31,6 +31,18 @@ namespace WebAPI.Controllers
         {
             _context = context;
             _console = console;
+        }
+
+        // GET: rest/consoleversion
+        [HttpGet("version")]
+        public ActionResult<ConsoleInfo> GetConsoleVersion()
+        {
+            if (_context.ConsoleVersion != null && _context.ConsoleVersion.Count() > 0) {
+                ConsoleInfo _info = _context.ConsoleVersion.First();
+                return _info;
+            } else {
+                return NotFound();
+            }
         }
 
         // GET: api/Console/connect

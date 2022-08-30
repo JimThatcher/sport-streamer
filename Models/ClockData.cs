@@ -11,6 +11,7 @@ namespace WebAPI.Models
             PlayClock = playClock * 1000;
         } */
         private long clockMillis;
+#pragma warning disable 0169
         private long playMillis;
         public long Id { get; set; }
 

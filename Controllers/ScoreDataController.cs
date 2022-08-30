@@ -27,7 +27,7 @@ namespace WebAPI.Controllers
             _console = console;
             _sseService = serverSentEventsService;
             if (!ScoreDataExists(1)) {
-                var scoreData = new ScoreData();
+                var scoreData = new DbScoreData();
                 scoreData.id = 1;
                 if (_context.ScoreboardData != null) {
                     _context.ScoreboardData.Add(scoreData);
@@ -36,7 +36,7 @@ namespace WebAPI.Controllers
             }
         }
 
-        public async void UpdateBrowserClients(ScoreData scoreData)
+        public async void UpdateBrowserClients(DbScoreData scoreData)
         {
             ServerSentEvent sse = new ServerSentEvent();
             sse.Type = "score";
@@ -45,9 +45,9 @@ namespace WebAPI.Controllers
             await _sseService.SendEventAsync(sse);
         }
 
-        // GET: api/ScoreData
+        // GET: api/score
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ScoreData>>> GetScoreboardData()
+        public async Task<ActionResult<IEnumerable<DbScoreData>>> GetScoreboardData()
         {
             if (_context.ScoreboardData == null) {
                 return NotFound();
@@ -55,9 +55,9 @@ namespace WebAPI.Controllers
             return await _context.ScoreboardData.ToListAsync();
         }
 
-        // GET: api/ScoreData/5
+        // GET: api/score/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<ScoreData>> GetScoreData(long id)
+        public async Task<ActionResult<DbScoreData>> GetScoreData(long id)
         {
             if (_context.ScoreboardData == null) {
                 return NotFound();
@@ -72,9 +72,9 @@ namespace WebAPI.Controllers
             return scoreData;
         }
 
-        // GET: api/ScoreData/ChangePoss
+        // GET: api/score/ChangePoss
         [HttpGet("ChangePoss/{side=Switch}")]
-        public async Task<ActionResult<ScoreData>> ChangePossession(string side)
+        public async Task<ActionResult<DbScoreData>> ChangePossession(string side)
         {
             if (_context.ScoreboardData == null) {
                 return NotFound();
@@ -83,7 +83,7 @@ namespace WebAPI.Controllers
 
             if (scoreData == null)
             {
-                scoreData = new ScoreData();
+                scoreData = new DbScoreData();
                 scoreData.id = 1;
                 _context.ScoreboardData.Add(scoreData);
             }
@@ -130,11 +130,11 @@ namespace WebAPI.Controllers
             return scoreData;
         }
 
-        // GET: api/ScoreData/Flag
+        // GET: api/score/Flag
         // Sets the "Flag" parameter to true for 10 seconds, then clears it
         // TODO: Change to support penalties against home or guest team.
         [HttpGet("Flag")]
-        public async Task<ActionResult<ScoreData>> ThrowFlag()
+        public async Task<ActionResult<DbScoreData>> ThrowFlag()
         {
             if (_context.ScoreboardData == null) {
                 return NotFound();
@@ -143,7 +143,7 @@ namespace WebAPI.Controllers
 
             if (scoreData == null)
             {
-                scoreData = new ScoreData();
+                scoreData = new DbScoreData();
                 scoreData.id = 1;
                 _context.ScoreboardData.Add(scoreData);
             }
@@ -185,7 +185,7 @@ namespace WebAPI.Controllers
 
             if (scoreData == null)
             {
-                scoreData = new ScoreData();
+                scoreData = new DbScoreData();
                 scoreData.id = 1;
                 dbContext.ScoreboardData.Add(scoreData);
             }
@@ -206,10 +206,10 @@ namespace WebAPI.Controllers
             UpdateBrowserClients(scoreData);
         }
 
-        // GET: api/ScoreData/TimeOut/Home
+        // GET: api/score/TimeOut/Home
         // Sets the "HomeTimeOut" or "GuestTimeOut" parameter to true for 10 seconds, then clears it
         [HttpGet("Timeout/{team}")]
-        public async Task<ActionResult<ScoreData>> CallTimeOut(string team)
+        public async Task<ActionResult<DbScoreData>> CallTimeOut(string team)
         {
             if (_context.ScoreboardData == null) {
                 return NotFound();
@@ -218,7 +218,7 @@ namespace WebAPI.Controllers
 
             if (scoreData == null)
             {
-                scoreData = new ScoreData();
+                scoreData = new DbScoreData();
                 scoreData.id = 1;
                 _context.ScoreboardData.Add(scoreData);
             }
@@ -254,18 +254,18 @@ namespace WebAPI.Controllers
             return scoreData;
         }
 
-        // GET: api/ScoreData/Down/Up
+        // GET: api/score/Down/Up
         [HttpGet("Down/{upDown}")]
-        public async Task<ActionResult<ScoreData>> ChangeDown(string upDown)
+        public async Task<ActionResult<DbScoreData>> ChangeDown(string upDown)
         {
             if (_context.ScoreboardData == null) {
                 return NotFound();
             }
-            var scoreData = await _context.ScoreboardData.FindAsync((long) 1);
+            var scoreData = await _context.ScoreboardData.FindAsync((long) 1) as DbScoreData;
 
             if (scoreData == null)
             {
-                scoreData = new ScoreData();
+                scoreData = new DbScoreData();
                 scoreData.id = 1;
                 _context.ScoreboardData.Add(scoreData);
             }
@@ -273,7 +273,7 @@ namespace WebAPI.Controllers
                 scoreData.Dn++;
             }
             else if (upDown == "Down") {
-                if (scoreData.Dn > 1)
+                if (scoreData.Dn >= 1)
                     scoreData.Dn--;
             }
             else if (upDown == "Reset") {
@@ -302,7 +302,7 @@ namespace WebAPI.Controllers
             return scoreData;
         }
 
-        // GET: api/ScoreData/ToGo/6
+        // GET: api/score/ToGo/6
         [HttpGet("ToGo/{addTo}")]
         public async Task<ActionResult<ScoreData>> ChangeToGo(int addTo)
         {
@@ -313,7 +313,7 @@ namespace WebAPI.Controllers
 
             if (scoreData == null)
             {
-                scoreData = new ScoreData();
+                scoreData = new DbScoreData();
                 scoreData.id = 1;
                 _context.ScoreboardData.Add(scoreData);
             }
@@ -340,9 +340,9 @@ namespace WebAPI.Controllers
             return scoreData;
         }
 
-        // GET: api/ScoreData/HomeScore/6
+        // GET: api/score/HomeScore/6
         [HttpGet("HomeScore/{addTo}")]
-        public async Task<ActionResult<ScoreData>> ChangeHomeScore(int addTo)
+        public async Task<ActionResult<DbScoreData>> ChangeHomeScore(int addTo)
         {
             if (_context.ScoreboardData == null) {
                 return NotFound();
@@ -351,7 +351,7 @@ namespace WebAPI.Controllers
 
             if (scoreData == null)
             {
-                scoreData = new ScoreData();
+                scoreData = new DbScoreData();
                 scoreData.id = 1;
                 _context.ScoreboardData.Add(scoreData);
             }
@@ -380,9 +380,9 @@ namespace WebAPI.Controllers
             return scoreData;
         }
 
-        // GET: api/ScoreData/GuestScore/6
+        // GET: api/score/GuestScore/6
         [HttpGet("GuestScore/{addTo}")]
-        public async Task<ActionResult<ScoreData>> ChangeGuestScore(int addTo)
+        public async Task<ActionResult<DbScoreData>> ChangeGuestScore(int addTo)
         {
             if (_context.ScoreboardData == null) {
                 return NotFound();
@@ -391,7 +391,7 @@ namespace WebAPI.Controllers
 
             if (scoreData == null)
             {
-                scoreData = new ScoreData();
+                scoreData = new DbScoreData();
                 scoreData.id = 1;
                 _context.ScoreboardData.Add(scoreData);
             }
@@ -420,9 +420,9 @@ namespace WebAPI.Controllers
             return scoreData;
         }
 
-        // GET: api/ScoreData/Quarter/Up
+        // GET: api/score/Quarter/Up
         [HttpGet("Quarter/{upDown}")]
-        public async Task<ActionResult<ScoreData>> ChangeQuarter(string upDown)
+        public async Task<ActionResult<DbScoreData>> ChangeQuarter(string upDown)
         {
             if (_context.ScoreboardData == null) {
                 return NotFound();
@@ -431,7 +431,7 @@ namespace WebAPI.Controllers
 
             if (scoreData == null)
             {
-                scoreData = new ScoreData();
+                scoreData = new DbScoreData();
                 scoreData.id = 1;
                 _context.ScoreboardData.Add(scoreData);
             }
@@ -467,9 +467,9 @@ namespace WebAPI.Controllers
             return scoreData;
         }
 
-        // GET: api/ScoreData/HomeTOL/Down
+        // GET: api/score/HomeTOL/Down
         [HttpGet("HomeTOL/{upDown}")]
-        public async Task<ActionResult<ScoreData>> ChangeHomeTOL(string upDown)
+        public async Task<ActionResult<DbScoreData>> ChangeHomeTOL(string upDown)
         {
             if (_context.ScoreboardData == null) {
                 return NotFound();
@@ -478,7 +478,7 @@ namespace WebAPI.Controllers
 
             if (scoreData == null)
             {
-                scoreData = new ScoreData();
+                scoreData = new DbScoreData();
                 scoreData.id = 1;
                 _context.ScoreboardData.Add(scoreData);
             }
@@ -515,9 +515,9 @@ namespace WebAPI.Controllers
             return scoreData;
         }
 
-        // GET: api/ScoreData/GuestTOL/Down
+        // GET: api/score/GuestTOL/Down
         [HttpGet("GuestTOL/{upDown}")]
-        public async Task<ActionResult<ScoreData>> ChangeGuestTOL(string upDown)
+        public async Task<ActionResult<DbScoreData>> ChangeGuestTOL(string upDown)
         {
             if (_context.ScoreboardData == null) {
                 return NotFound();
@@ -526,7 +526,7 @@ namespace WebAPI.Controllers
 
             if (scoreData == null)
             {
-                scoreData = new ScoreData();
+                scoreData = new DbScoreData();
                 scoreData.id = 1;
                 _context.ScoreboardData.Add(scoreData);
             }
@@ -563,9 +563,9 @@ namespace WebAPI.Controllers
             return scoreData;
         }
 
-        // GET: api/ScoreData/Reset
+        // GET: api/score/Reset
         [HttpGet("Reset")]
-        public async Task<ActionResult<ScoreData>> Reset()
+        public async Task<ActionResult<DbScoreData>> Reset()
         {
             if (_context.ScoreboardData == null) {
                 return NotFound();
@@ -574,7 +574,7 @@ namespace WebAPI.Controllers
 
             if (scoreData == null)
             {
-                scoreData = new ScoreData();
+                scoreData = new DbScoreData();
                 scoreData.id = 1;
                 _context.ScoreboardData.Add(scoreData);
             }
@@ -582,8 +582,8 @@ namespace WebAPI.Controllers
             scoreData.Gs = 0;
             scoreData.Htol = 3;
             scoreData.Gtol = 3;
-            scoreData.Dn = 1;
-            scoreData.Dt = 10;
+            scoreData.Dn = 0;
+            scoreData.Dt = 0;
             scoreData.Pd = 1;
             scoreData.Hpo = false;
             scoreData.Gpo = false;
@@ -613,12 +613,12 @@ namespace WebAPI.Controllers
         }
 
         [HttpGet("Setup")]
-        public async Task<ActionResult<ScoreData>> SetupScoreData()
+        public async Task<ActionResult<DbScoreData>> SetupScoreData()
         {
             if (_context.ScoreboardData == null) {
                 return NotFound();
             }
-            ScoreData scoreData = new ScoreData();
+            DbScoreData scoreData = new DbScoreData();
             _context.ScoreboardData.Add(scoreData);
             await _context.SaveChangesAsync();
             
@@ -627,10 +627,10 @@ namespace WebAPI.Controllers
             return CreatedAtAction(nameof(GetScoreData), new { id = scoreData.id }, scoreData);
         }
 
-        // POST: api/ScoreData
+        // POST: api/score
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<ScoreData>> PostScoreData(ScoreData scoreData)
+        public async Task<ActionResult<DbScoreData>> PostScoreData(DbScoreData scoreData)
         {
             if (_context.ScoreboardData == null) {
                 return NotFound();

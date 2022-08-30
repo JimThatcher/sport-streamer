@@ -1,7 +1,7 @@
 import { FC, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Button, TextField } from '@mui/material';
+import { Avatar, Button, Stack, TextField } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Cancel';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
@@ -13,6 +13,7 @@ import * as DbApi from './api';
 import { SponsorData } from './types';
 import { SponsorContext } from './OverlayAssetsContext';
 import { useSnackbar } from 'notistack';
+import { PLAYER_IMAGE_PATH } from './projConfig';
 
 const SponsorSetupForm: FC = () => {
   const { selectedSponsor, deselectSponsor } = useContext(SponsorContext);
@@ -89,15 +90,19 @@ const SponsorSetupForm: FC = () => {
           onChange={updateFormValue}
           margin="normal"
         />
-        <TextField
-          name="image"
-          label="Sponsor image file"
-          fullWidth
-          variant="outlined"
-          value={data.image}
-          onChange={updateFormValue}
-          margin="normal"
-        />
+        <Stack direction="row" spacing={2}>
+          <Avatar src={PLAYER_IMAGE_PATH + data.image} variant="square" >
+          </Avatar>
+          <TextField
+            name="image"
+            label="Sponsor image file"
+            fullWidth
+            variant="outlined"
+            value={data.image}
+            onChange={updateFormValue}
+            margin="normal"
+          />
+        </Stack>
         <ButtonRow mt={1}>
           <Button startIcon={<CancelIcon />} disabled={saving} variant="contained" color="primary" type="button" onClick={goBack}>
             Cancel

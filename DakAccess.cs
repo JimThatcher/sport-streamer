@@ -62,14 +62,14 @@ namespace DakAccess
         // TODO: Once a console is connected, convert this to a watchdog timer that will tell us if no data is
         // received from the console. Daktronics consoles send data every second, so if we don't receive data
         // from the console for at least 10 seconds, we can assume it is disconnected.
-        private Timer? _consoleConnectTimer;
+        private Timer? _consoleConnectTimer = null;
         private bool _ConnectedToConsole = false;
         private DateTime _LastDataReceived = DateTime.Now;
         private CancellationToken _token;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly IServerSentEventsService _sseService;
-        private string _clockJson;
-        private string _scoreJson;
+        // private string _clockJson;
+        // private string _scoreJson;
         // Time for managing manual clock updates when no console is connected.
         private Timer? _clockTimer = null;
 
@@ -81,10 +81,10 @@ namespace DakAccess
             _sseService.ClientDisconnected += SseService_ClientDisconnected;
             // _context = context;
             _ConnectedToConsole = false;
-            _clockJson = "";
-            _scoreJson = "";
+            // _clockJson = "";
+            // _scoreJson = "";
         }
-         private void SseService_ClientConnected(object sender, ServerSentEventsClientConnectedArgs e)
+        private void SseService_ClientConnected(object? sender, ServerSentEventsClientConnectedArgs e)
         {
             HttpRequest request = e.Request; 
             IServerSentEventsClient client = e.Client;
@@ -102,7 +102,7 @@ namespace DakAccess
             client.SendEventAsync(evt);
             // TODO: Send Teams to client also.
         }
-        private void SseService_ClientDisconnected(object sender, ServerSentEventsClientDisconnectedArgs e)
+        private void SseService_ClientDisconnected(object? sender, ServerSentEventsClientDisconnectedArgs e)
         {
             _logger.LogInformation("SSE Client disconnected: " + e.Request.Host + e.Request.Path);
             // Console.WriteLine("Client disconnected");
@@ -121,7 +121,7 @@ namespace DakAccess
                 _clockTimer.Change(Timeout.Infinite, Timeout.Infinite);
             }
         }
-        private void ManualClockTimer_Tick(object state) {
+        private void ManualClockTimer_Tick(object? state) {
             // Check if we have a console connected. There is no reason to post manual clock SSE updates
             // if we have a console connected.
             if (!_ConnectedToConsole) {
@@ -164,14 +164,14 @@ namespace DakAccess
             using (var scope = _scopeFactory.CreateScope()) {
                 var dbContext = scope.ServiceProvider.GetRequiredService<GameContext>();
                 if (dbContext.ScoreboardData == null) {
-                    ScoreData newScore = new ScoreData();
-                    return newScore.asJson();
+                    DbScoreData newScore = new DbScoreData();
+                    return JsonSerializer.Serialize(newScore);
                 }
-                ScoreData? scoreData = dbContext.ScoreboardData.Find((long) 1);
+                DbScoreData? scoreData = dbContext.ScoreboardData.Find((long) 1);
 
                 if (scoreData == null)
                 {
-                    scoreData = new ScoreData();
+                    scoreData = new DbScoreData();
                     scoreData.id = 1;
                     try {
                         dbContext.ScoreboardData.Add(scoreData);
@@ -182,10 +182,10 @@ namespace DakAccess
                 return JsonSerializer.Serialize(scoreData);
             }
         }
-
-        // TODO: Change these to use the database.
+        /*
         public string ClocksJson { get { return _clockJson; } }
         public string ScoreJson { get { return _scoreJson; } }
+        */
 
         public bool IsConsoleConnected { get {return _ConnectedToConsole; }}
 
@@ -209,13 +209,14 @@ namespace DakAccess
         // will attempt to connect to the console every 10 seconds.
         public Task ConnectConsole() {
             _logger.LogInformation("ConsoleData ConnectConsole called.");
-            if (_consoleConnectTimer != null) {
+            if (_consoleConnectTimer == null) {
                 _consoleConnectTimer = new Timer(ConnectToConsole, null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
             }
             return Task.CompletedTask;
         }
 
         // These methods are called from the ConsoleController to start or stop the _consoleConnectTimer.
+        // TODO: Stop needs to free the COM port and set _ConnectedToConsole to false
         public void StartConsoleConnectTimer() {
             _logger.LogInformation("ConsoleData StartConsoleConnectTimer called.");
             if (_consoleConnectTimer != null) {
@@ -228,10 +229,15 @@ namespace DakAccess
             if (_consoleConnectTimer != null) {
                 _consoleConnectTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
             }
+            if (_ConnectedToConsole) {
+                // We overload meaning of the _ConnectedToConsole flag here, testing if it's "false" in the ReadDataFromSerial()
+                // function and disconnecting from the serial port if _ConnectedToConsole is changed to false.
+                _ConnectedToConsole = false;
+            }
             // return Task.CompletedTask;
         }
 
-        private void ConnectToConsole(object state) {
+        private void ConnectToConsole(object? state) {
             if (_ConnectedToConsole)
                 return;
             if (SerialPort.GetPortNames().Length == 0) {
@@ -281,6 +287,9 @@ namespace DakAccess
             }
         }
         private void Update(string dataStr, int offset, ref string allData) {
+            if (offset + dataStr.Length > allData.Length) {
+                allData = allData + new string(' ', (offset + dataStr.Length) - allData.Length);
+            }
             string prefix = (offset == 0) ? "" : allData.Substring(0, offset);
             string suffix = (allData.Length > (offset + dataStr.Length)) ? allData.Substring(offset + dataStr.Length) : "";
             allData = prefix + dataStr + suffix;
@@ -333,7 +342,7 @@ namespace DakAccess
 
         private void ReadDataFromSerial(SerialPort port)
         {
-            string allData = ""; // Will hold the full info from the console
+            string allData = new string(' ', 511); // Will hold the full info from the console
             try {
                 port.Open();
                 string header = "";
@@ -349,12 +358,12 @@ namespace DakAccess
                 ISportData dakData = GetSportInterface("1000"); // Let's default to basic, then update based on controller setting
                 allData = dakData.GetDefaultData();
                 Update(dakData.GetDefaultData(), 0, ref allData); // Do I really need both this and the previous line?
-                _scoreJson = dakData.GetData(ref allData);
-                _clockJson = dakData.GetClocks(ref allData);
+                // _scoreJson = dakData.GetData(ref allData);
+                // _clockJson = dakData.GetClocks(ref allData);
 
                 while (true) {
                     try {
-                        if (_token.IsCancellationRequested) {
+                        if (_token.IsCancellationRequested || _ConnectedToConsole == false) {
                             _logger.LogInformation("Cancellation was requested, exiting read from console");
                             break;
                         }
@@ -435,29 +444,60 @@ namespace DakAccess
                                             // This allows the parser to automatically adapt to changes in the
                                             dakData = GetSportInterface(updateText.Substring(183, 4));
                                             // currentSportCode = updateText.Substring(183, 4);
-                                        }
-                                        if (nOffset < dakData.MaxDataLen()) {
                                             Update(updateText, nOffset, ref allData);
                                             dakData.UpdateData(updateText.Length, nOffset, ref allData);
                                             using (var scope = _scopeFactory.CreateScope()) {
                                                 var dbContext = scope.ServiceProvider.GetRequiredService<GameContext>();
-                                                // TODO: Write updates to database
-                                                if (dakData.ClockUpdated()) {
-                                                    _clockJson = dakData.GetClocks(ref allData);
-                                                    ServerSentEvent evt = new ServerSentEvent();
-                                                    evt.Type = "clock";
-                                                    evt.Data = new List<string>(new string[] {_clockJson});
-                                                    _sseService.SendEventAsync(evt);
-                                                    _logger.LogTrace(_clockJson);
+                                                if (dbContext != null) {
+                                                    if (dbContext.ConsoleVersion != null) {
+                                                        if (dbContext.ConsoleVersion.Count() == 0)
+                                                            dbContext.ConsoleVersion.Add(dakData.GetConsoleInfo());
+                                                        else
+                                                            dbContext.ConsoleVersion.Update(dakData.GetConsoleInfo());
+                                                        dbContext.SaveChanges();
+                                                    }
                                                 }
-                                                if (dakData.DataUpdated()) {
-                                                    _scoreJson = dakData.GetData(ref allData);
-                                                    ServerSentEvent evt = new ServerSentEvent();
-                                                    evt.Type = "score";
-                                                    evt.Data = new List<string>(new string[] {_scoreJson});
-                                                    _sseService.SendEventAsync(evt);
-                                                    _logger.LogTrace(_scoreJson);
+                                            }
+                                        }
+                                        Update(updateText, nOffset, ref allData);
+                                        dakData.UpdateData(updateText.Length, nOffset, ref allData);
+                                        using (var scope = _scopeFactory.CreateScope()) {
+                                            var dbContext = scope.ServiceProvider.GetRequiredService<GameContext>();
+                                            if (nOffset > 0 || updateText.Length > 32)
+                                                _logger.LogInformation(String.Format("Dak Update: {0}, Clock updated: {1}, Score updated: {2}", updateText, dakData.ClockUpdated(), dakData.DataUpdated() ));
+                                            if (dakData.ClockUpdated()) {
+                                                // _clockJson = dakData.GetClocks(ref allData);
+                                                string _clock = JsonSerializer.Serialize(dakData.GetClockData());
+                                                if (dbContext != null && dbContext.Clocks != null) {
+                                                    if (dbContext.Clocks.Count() == 0) {
+                                                        dbContext.Clocks.Add(dakData.GetClockData());
+                                                    } else {
+                                                        dbContext.Clocks.Update(dakData.GetClockData());
+                                                    }
+                                                    dbContext.SaveChanges();
                                                 }
+                                                ServerSentEvent evt = new ServerSentEvent();
+                                                evt.Type = "clock";
+                                                evt.Data = new List<string>(new string[] {dakData.GetClockData().asJson()});
+                                                _sseService.SendEventAsync(evt);
+                                                _logger.LogTrace(_clock);
+                                            }
+                                            if (dakData.DataUpdated()) {
+                                                // _scoreJson = dakData.GetData(ref allData);
+                                                string _score = JsonSerializer.Serialize(dakData.GetScoreData());
+                                                if (dbContext != null && dbContext.ScoreboardData != null) {
+                                                    if (dbContext.ScoreboardData.Count() == 0) {
+                                                        dbContext.ScoreboardData.Add(dakData.GetScoreData());
+                                                    } else {
+                                                        dbContext.ScoreboardData.Update(dakData.GetScoreData());
+                                                    }
+                                                    dbContext.SaveChanges();
+                                                }
+                                                ServerSentEvent evt = new ServerSentEvent();
+                                                evt.Type = "score";
+                                                evt.Data = new List<string>(new string[] {_score});
+                                                _sseService.SendEventAsync(evt);
+                                                _logger.LogTrace(_score);
                                             }
                                         }
                                     }

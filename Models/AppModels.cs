@@ -5,6 +5,14 @@ using System;
 
 namespace WebAPI.Models
 {
+    public class ServiceInfo
+    {
+        public string Version { get; set; } = "0.8.0.20220823";
+        public string SchemaVersion { get; set; } = "1.0.0.0";
+        public bool IsConsoleConnected {get; set;} 
+        // TODO: Add an enum for consoel connection status (Disconnected, attempting, found serial port, connected to console)
+    }
+
     public class Features
     {
         public bool device { get; set; }

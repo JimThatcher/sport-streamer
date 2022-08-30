@@ -12,6 +12,57 @@ using System.Text.Json;
 
 namespace WebAPI.Controllers
 {
+    public class Player2
+    {
+      public Player2() {
+        this.id = 0;
+        this.jersey = 0;
+        this.name = string.Empty;
+        this.position = string.Empty;
+        this.image = string.Empty;
+        this.year = 0;
+        this.height = "0'0\"";
+        this.weight = 0;
+        this.school = string.Empty;
+      }
+        public Player2(Player player) {
+            this.id = player.id;
+            this.jersey = player.jersey;
+            this.name = player.name;
+            this.position = player.position;
+            this.image = player.image;
+            this.year = player.year;
+            this.height = string.Format("{0}'{1}\"", player.height / 12, player.height % 12);
+            this.weight = player.weight;
+            this.school = player.school;
+        }
+        public Player getPlayer() {
+            Player player = new Player();
+            player.id = this.id;
+            player.jersey = this.jersey;
+            player.name = this.name;
+            player.position = this.position;
+            player.image = this.image;
+            player.year = this.year;
+            player.weight = this.weight;
+            player.school = this.school;
+            int nFt = this.height.IndexOf("'");
+            int nIn = this.height.IndexOf("\"");
+            player.height = (12 * int.Parse(this.height.Substring(0, nFt))) + int.Parse(this.height.Substring(nFt + 1, nIn - nFt - 1));
+            return player;
+        }
+        public long id { get; set; }
+        public long jersey { get; set; }
+        public string name { get; set; } = string.Empty;
+        public string position { get; set; } = string.Empty;
+        public string image { get; set; } = string.Empty;
+        public int year { get; set; }
+        public string height { get; set; } = string.Empty;
+        public int weight { get; set; }
+        public string school {get; set;} = string.Empty;
+    }
+
+
     [Route("rest/db")]
     [ApiController]
     public class OverlayManagerController : ControllerBase
@@ -19,12 +70,16 @@ namespace WebAPI.Controllers
         private readonly GameMgrContext _context;
         private readonly GameContext _gameContext;
         private readonly IServerSentEventsService _sseService;
+        private string? _webRoot;
 
         public OverlayManagerController(GameMgrContext context, GameContext gameContext, IServerSentEventsService serverSentEventsService)
         {
             _context = context;
             _gameContext = gameContext;
             _sseService = serverSentEventsService;
+#pragma warning disable 8600
+            _webRoot = (string) AppDomain.CurrentDomain.GetData("WebRootPath");
+#pragma warning restore 8600
         }
 
         // Players table management. Basic CRUD operations
@@ -34,14 +89,14 @@ namespace WebAPI.Controllers
         // includes an id, that id is ignored because the database auto-assigns id as the primary key.
         // Valid Player entries should include at least the jersey, name, and image fields.
         [HttpPost("player")]
-        public async Task<ActionResult<Player>> PostPlayer(Player player)
+        public async Task<ActionResult<Player2>> PostPlayer(Player2 player)
         {
           if (_context.Players == null) {
             return NotFound();
           }
-          _context.Players.Add(player);
+          _context.Players.Add(player.getPlayer());
           await _context.SaveChangesAsync();
-          return CreatedAtAction(nameof(Player), new { id = player.id }, player);
+          return CreatedAtAction(nameof(Player2), new { id = player.id }, player);
         }
 
         // POST: rest/db/player/{imageName}
@@ -54,14 +109,14 @@ namespace WebAPI.Controllers
           {
             return BadRequest("Invalid image type");
           }
-          var webRootPath = (string) AppDomain.CurrentDomain.GetData("WebRootPath");
-          if (webRootPath == null)
+          // var webRootPath = (string) AppDomain.CurrentDomain.GetData("WebRootPath");
+          if (_webRoot == null)
           {
             return StatusCode(StatusCodes.Status500InternalServerError, "No WebRootPath found");
           }
           // TODO: Allow app configuration of image directory.
           // TODO: Allow upload of multiple images.
-          var path = Path.Combine(webRootPath, "overlay\\Images", imageName);
+          var path = Path.Combine(_webRoot, "overlay\\Images", imageName);
           using (var stream = new FileStream(path, FileMode.Create))
           {
             await image.CopyToAsync(stream);
@@ -84,7 +139,7 @@ namespace WebAPI.Controllers
         // Returns the Player with the specified id. We don't use jersey number here because
         // that may not be unique across all players on a large team.
         [HttpGet("player/{id}")]
-        public async Task<ActionResult<Player>> GetPlayer(long id)
+        public async Task<ActionResult<Player2>> GetPlayer(long id)
         {
           if (_context.Players == null) {
             return NotFound();
@@ -93,18 +148,19 @@ namespace WebAPI.Controllers
           if (player == null) {
             return NotFound();
           }
-          return player;
+          return new Player2(player);
         }
 
         // PUT: rest/db/player/5
         // Update the Player with the specified id.
         [HttpPut("player/{id}")]
-        public async Task<IActionResult> PutPlayer(long id, Player player)
+        public async Task<IActionResult> PutPlayer(long id, Player2 player)
         {
             if (id != player.id) {
                 return BadRequest();
             }
-            _context.Entry(player).State = EntityState.Modified;
+            Player _player = player.getPlayer();
+            _context.Entry(_player).State = EntityState.Modified;
             try {
                 await _context.SaveChangesAsync();
             }
@@ -233,14 +289,14 @@ namespace WebAPI.Controllers
           {
             return BadRequest("Invalid image type");
           }
-          var webRootPath = (string) AppDomain.CurrentDomain.GetData("WebRootPath");
-          if (webRootPath == null)
+          // var webRootPath = (string) AppDomain.CurrentDomain.GetData("WebRootPath");
+          if (_webRoot == null)
           {
             return StatusCode(StatusCodes.Status500InternalServerError, "No WebRootPath found");
           }
           // TODO: Allow app configuration of image directory.
           // TODO: Allow upload of multiple images.
-          var path = Path.Combine(webRootPath, "overlay\\Images", imageName);
+          var path = Path.Combine(_webRoot, "overlay\\Images", imageName);
           using (var stream = new FileStream(path, FileMode.Create))
           {
             await image.CopyToAsync(stream);

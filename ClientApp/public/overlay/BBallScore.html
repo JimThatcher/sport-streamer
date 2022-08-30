@@ -3,34 +3,23 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=1200 height=105">
-    <!--meta http-equiv="refresh" content="2"/-->
     <style type="text/css">
         body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }
         .scoreBug { position: relative; }
         .scoreCanvas { position: absolute; }
-        body.hide {
-            opacity: 0;
-            transition-duration: 0.9s;
-            transition-property: opacity;
-        }
-        body.show {
-            opacity: 1;
-            transition-duration: 0.8s;
-            transition-property: opacity;
-        }
     </style>
 </head>
 <title>Scoreboard</title>
 <body>
     <div class="scoreBug">
-        <div style="position: absolute; top: 917px; left: 727px; width: 461px; height: 25px;">
+        <div style="position: absolute; top: 0px; left: 253px; width: 461px; height: 25px;">
             <canvas id="timeoutCanvas" width="461" height="25" style="border:1px solid #00000000;"></canvas>
         </div>
-        <div style="position: absolute; top: 917px; left: 1206px; width: 120px; height: 25px;">
+        <div style="position: absolute; top: 0px; left: 731px; width: 120px; height: 25px;">
             <canvas id="flagCanvas" width="120" height="25" style="border:1px solid #00000000;"></canvas>
         </div>
-        <div style="position: absolute; top: 940px; left: 475px; width: 1120px; height: 80px;">
-            <canvas id="scoreCanvas" width="1120" height="80" style="border:1px solid #00000000;"></canvas>
+        <div style="position: absolute; top: 24px; left: 0px; width: 1200px; height: 80px;">
+            <canvas id="scoreCanvas" width="1200" height="80" style="border:1px solid #00000000;"></canvas>
         </div>
     </div>
 
@@ -40,64 +29,51 @@
             var v = n%100;
             return n + (s[(v-20)%10] || s[v] || s[0]);
         }
+        /*
         function loadData() {
-            fetch('../api/score', {cache: "no-store"})
-            .then(function (response) {
-                return response.json();
-            })
-            .then(function (data) {
-                fetch('../api/clock', {cache: "no-store"})
+                fetch('/api/ScoreData/live', {cache: "no-store"})
                 .then(function (response) {
                     return response.json();
                 })
-                .then(function (clockData) {
-                    var periodLoc = clockData["Clk"].lastIndexOf(".");
-                    var resultStr = "";
-                    if (periodLoc > 1) {
-                        resultStr = clockData["Clk"].substring(0, periodLoc).trim();
+                .then(function (data) {
+                    fetch('/api/ClockData/live', {cache: "no-store"})
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (clockData) {
+                        var periodLoc = clockData["Clock"].lastIndexOf(".");
+                        var clockStr = "";
+                        if (periodLoc > 1) {
+                            clockStr = clockData["Clock"].substring(0, periodLoc).trim();
+                        }
+                        else {
+                            clockStr = clockData["Clock"].trim();
+                        }
+                        var shotClock = "";
+                        if (clockData["ShotClock"]) {
+                            var periodLoc = clockData["ShotClock"].lastIndexOf(".");
+                            if (periodLoc > 1) {
+                                shotClock = clockData["ShotClock"].substring(periodLoc - 2, periodLoc).trim();
+                            }
+                            else {
+                                shotClock = clockData["ShotClock"].trim();
+                            }
+                        }
+                        clockAndQuarter((!useWebClock) ? 0 : clockStr, shotClock, ordinal(data["PeriodNum"].trim()));
+                    });
+                    scores(data["Hs"].trim(), data["Gs"].trim());
+                    if (data["Hf"] && data["Hb"] && data["Hpo"] && data["Gf"] && data["Gb"] && data["Gpo"]) {
+                        drawFoulsPanels(data["Hf"].trim(),data["Hb"],data["Hpo"],data["Gf"].trim(),data["Gb"],data["Gpo"]);
                     }
-                    else {
-                        resultStr = clockData["Clk"].trim();
+                    if (data["Htol"] && data["Gtol"]) {
+                        timeOuts(data["Htol"].trim(), data["Gtol"].trim());
                     }
-                    clock(resultStr);
-                    quarter(ordinal(data["Pd"]));
-                });
-                if (data["Dn"] && data["Dt"]) {
-                    downAndDistance(data["Dn"], data["Dt"]);
-                }
-                scores(data["Hs"], data["Gs"]);
-                if (data["Hpo"] && data["Gpo"]) {
-                    showPossession(data["Hpo"], data["Gpo"]);
-                }
-                if (data["Htol"] && data["Gtol"]) {
-                    timeOuts(data["Htol"], data["Gtol"]);
-                }
-                if (data["Fl"]) {
-                        throwFlag(data["Fl"]);
-                }
-                if (data["Hto"] && data["Gto"]) {
-                    var homeTO = (data["Hto"]);
-                    var guestTO = (data["Gto"]);
-                    showTimeOut(homeTO, guestTO);
-                }
-            })
-            .catch(function (err) {
-                console.log('error: ' + err);
-            })
+                })
+                .catch(function (err) {
+                    console.log('error: ' + err);
+                })
         };
-
-        function throwFlag(flag) {
-            var c = document.getElementById("flagCanvas");
-            var ctx = c.getContext("2d");
-            ctx.clearRect(0,0,120,25);
-            if (flag) {
-                ctx.fillStyle = "yellow";
-                ctx.fillRect(0, 0, 120, 25);
-                ctx.font = "italic 16pt Segoe UI Black";
-                ctx.fillStyle = "black";
-                ctx.fillText("FLAG", 60 - (ctx.measureText("FLAG").width/2), 21);
-            }
-        };
+        */
 
         function showTimeOut(home, guest) {
             var x = (home) ? 0 : 361;
@@ -121,43 +97,29 @@
             ctx.lineWidth = 8;
             ctx.lineCap = "round";
             var start = 0;
-            var end = 145;
-            for (let i=1; i<=3; i++) {
+            var end = -2;
+            for (let i=4; i>=1; i--) {
                 ctx.strokeStyle = (home >= i) ? hasTO : noTO;
-                start = end + 15;
-                end = start + 10;
+                start = end + 12;
+                end = start + 1;
                 ctx.beginPath();
-                ctx.moveTo(start, 63);
-                ctx.lineTo(end, 63);
+                ctx.moveTo(245, start);
+                ctx.lineTo(245, end);
                 ctx.stroke();
             }
-            end = 506;
-            for (let i=1; i<=3; i++) {
+            end = -2;
+            for (let i=4; i>=1; i--) {
                 ctx.strokeStyle = (guest >= i) ? hasTO : noTO;
-                start = end + 15;
-                end = start + 10;
+                start = end + 12;
+                end = start + 1;
                 ctx.beginPath();
-                ctx.moveTo(start, 63);
-                ctx.lineTo(end, 63);
+                ctx.moveTo(607, start);
+                ctx.lineTo(607, end);
                 ctx.stroke();
             }
-        }
-
-        function showPossession(home, guest) {
-            console.log("showPossession", home, guest);
-            var c = document.getElementById("scoreCanvas");
-            var ctx = c.getContext("2d");
-            noPoss = "#52525200";
-            hasPoss = "yellow";
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = (home) ? hasPoss : noPoss;
-            ctx.strokeRect(254, 3, 98, 73);
-            ctx.strokeStyle = (guest) ? hasPoss : noPoss;
-            ctx.strokeRect(615, 3, 98, 73);
         }
 
         function scores(homeScore, guestScore) {
-            console.log("Drawing scores ", homeScore, guestScore);
             var c = document.getElementById("scoreCanvas");
             var ctx = c.getContext("2d");
             ctx.clearRect(253, 2, 100, 75);
@@ -165,63 +127,64 @@
             ctx.fillStyle = "#525252cc";
             ctx.fillRect(253, 2, 100, 75); // Home score background
             ctx.fillRect(614, 2, 100, 75); // guest score background
-            ctx.font = "52pt Segoe UI Black";
+            ctx.font = "42pt Segoe UI Black";
             ctx.fillStyle = "white";
-            ctx.fillText(homeScore, 303 - (ctx.measureText(homeScore).width/2), 65);
-            ctx.fillText(guestScore, 662 - (ctx.measureText(guestScore).width/2), 65);
+            ctx.fillText(homeScore, 303 - (ctx.measureText(homeScore).width/2), 63);
+            ctx.fillText(guestScore, 665 - (ctx.measureText(guestScore).width/2), 63);
         }
 
-        function clock(clock) {
+        function clockAndQuarter(clock, shot, quarter) {
             var c = document.getElementById("scoreCanvas");
             var ctx = c.getContext("2d");
-            ctx.clearRect(731, 39, 120, 38);
+            ctx.clearRect(716, 2, 135, 75);
             ctx.fillStyle = "#282828cc";
-            ctx.fillRect(731, 39, 120, 38); // Period/Time background
+            ctx.fillRect(716, 2, 135, 75); // Period/Time background
             ctx.font = "24pt Segoe UI Semibold";
             if (clock != 0) {
                 ctx.fillStyle = "white";
-                ctx.fillText(clock, 791 - (ctx.measureText(clock).width/2), 70);
+                ctx.fillText(clock, 784 - (ctx.measureText(clock).width/2), 35);
             }
-        }
-
-        function quarter(quarter) {
-            var c = document.getElementById("scoreCanvas");
-            var ctx = c.getContext("2d");
-            ctx.clearRect(731, 2, 120, 38);
-            ctx.fillStyle = "#282828cc";
-            ctx.fillRect(731, 2, 120, 38); // Period/Time background
-            ctx.font = "24pt Segoe UI Semibold";
+            ctx.fillText(quarter, 818 - (ctx.measureText(quarter).width/2), 70);
             ctx.fillStyle = "yellow";
-            ctx.fillText(quarter, 791 - (ctx.measureText(quarter).width/2), 35);
+            if (shot != 0) {
+                ctx.fillText(shot, 751 - (ctx.measureText(shot).width/2), 70);
+            }
         }
 
-        function downAndDistance(down, distance) {
-            // If there is data in the Down, draw the background and write the data
-            console.log("Drawing down and distance ", down, distance);
+        function drawFoulsPanels(homeFouls, homeBonus, homePoss, guestFouls, guestBonus, guestPoss) {
             var c = document.getElementById("scoreCanvas");
             var ctx = c.getContext("2d");
-            ctx.clearRect(858, 2, 220, 75);
-            // Down-Distance BG - Only fill if 'Down' != "   "
-            if (down > 0) {
-                if (!hasDnD) {
-                    hasDnD = true;
-                    ctx.fillStyle = "#30303080";
-                    ctx.fillRect(851, 2, 7, 75);
-                }
-                ctx.fillStyle = "#2f2f2f99";
-                ctx.fillRect(858, 2, 220, 75);
-                ctx.font = "40px Segoe UI Semibold";
-                ctx.fillStyle = "yellow";
-                var distTxt = (distance > 0) ? ' & ' + distance : ' DOWN';
-                dndTxt = ordinal(down) + distTxt;
-                ctx.fillText(dndTxt, 968 - (ctx.measureText(dndTxt).width/2), 54);
+            // Rest the backgrounds
+            ctx.clearRect(30, 52, 223, 25);
+            ctx.clearRect(391, 52, 223, 25);
+            ctx.fillStyle = "#30303080";
+            ctx.fillRect(30, 52, 223, 25); // Main background
+            ctx.fillRect(391, 52, 223, 25); // Main background
+            ctx.fillStyle = homeColor;
+            ctx.fillRect(30, 52, 223, 25);
+            ctx.fillStyle = guestColor;
+            ctx.fillRect(391, 52, 223, 25);
+            homeIcon.onload();
+            guestIcon.onload();
+            ctx.font = "12pt Segoe UI Semibold";
+            // Write fouls
+            ctx.fillStyle = "white";
+            ctx.fillText("FOULS: " + homeFouls, 160, 70);
+            ctx.fillText("FOULS: " + guestFouls, 522, 70);
+            // Write Bonus indicators
+            if (homeBonus) {
+                ctx.fillText("BONUS", 85, 70);
             }
-            if (down <= 0 && hasDnD)
-            {
-                hasDnD = false;
-                ctx.clearRect(851, 2, 7, 75);
+            if (guestBonus) {
+                ctx.fillText("BONUS", 447, 70);
             }
-        };
+            // Write the Possession indicators
+            console.log("Homeposs/GuestPoss: ", homePoss, guestPoss);
+            ctx.fillStyle = (homePoss) ? "yellow" : homeColor;
+            ctx.fillText("P", 240, 70);
+            ctx.fillStyle = (guestPoss) ? "yellow" : guestColor;
+            ctx.fillText("P", 602, 70);
+        }
 
         function setupScoreboard() {
             // Draw the basic background for the scoreboard
@@ -232,8 +195,6 @@
             ctx.fillStyle = "#525252cc";
             ctx.fillRect(253, 2, 100, 75); // Home score background
             ctx.fillRect(614, 2, 100, 75); // guest score background
-            ctx.fillStyle = "#282828cc";
-            ctx.fillRect(731, 2, 120, 75); // Period/Time background
         };
 
         function parseQuery(queryString) {
@@ -244,17 +205,7 @@
                 query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
             }
             return query;
-        };
-
-        function showScoreboard() {
-            document.body.classList.remove('hide');
-            document.body.classList.add('show');
         }
-
-        function hideScoreboard() {
-            document.body.classList.remove('show');
-            document.body.classList.add('hide');
-        };
 
         function setupGame() {
             // Read the game configuration and draw the game static data
@@ -262,7 +213,7 @@
             queryParms = parseQuery(queryStr);
             var gameToShow = (queryParms['game']) ? queryParms['game'] : 'next';
             console.log(gameToShow);
-            fetch('../rest/db/game/' + gameToShow)
+            fetch('../rest/db/game/' + gameToShow, {cache: "no-store"})
             .then(function (response) {
                 return response.json();
             })
@@ -270,22 +221,24 @@
                 console.log(data);
                 homeIcon.src = '../Images/' + data["homeIcon"];
                 guestIcon.src = '../Images/' + data["guestIcon"];
+                homeColor = data["homeColor"];
+                guestColor = data["guestColor"];
                 homeName = data["homeName"].toUpperCase();
                 guestName = data["guestName"].toUpperCase();
                 var c = document.getElementById("scoreCanvas");
                 console.log("Score canvas: Width/height: Top/Left: ", c.clientWidth, c.clientHeight, c.clientTop, c.clientLeft);
                 var ctx = c.getContext("2d");
-                ctx.fillStyle = data["homeColor"];
+                ctx.fillStyle = homeColor;
                 ctx.fillRect(30, 2, 223, 75);
-                ctx.fillStyle = data["guestColor"];
+                ctx.fillStyle = guestColor;
                 ctx.fillRect(391, 2, 223, 75);
                 ctx.font = "16px Segoe UI Black";
                 ctx.fillStyle = "white";
-                if (data["homeRecord"] && data["homeRecord"] != "") {
-                    ctx.fillText(data["homeRecord"], 110, 68); 
+                if (data["HomeRecord"] && data["HomeRecord"] != "-"&& data["HomeRecord"] != "0-0") {
+                    ctx.fillText(data["HomeRecord"], 237 - ctx.measureText(data["HomeRecord"]).width, 21); 
                 }
-                if (data["guestRecord"] && data["guestRecord"] != "") {
-                    ctx.fillText(data["guestRecord"], 471, 68); 
+                if (data["GuestRecord"] && data["GuestRecord"] != "-" && data["GuestRecord"] != "0-0") {
+                    ctx.fillText(data["GuestRecord"], 598 - ctx.measureText(data["GuestRecord"]).width, 21); 
                 }
             })
             .catch(function (err) {
@@ -297,21 +250,22 @@
             // Write the team names on top of logos
             var c = document.getElementById("scoreCanvas");
             var ctx = c.getContext("2d");
-            ctx.font = "36px Segoe UI Semibold";
+            ctx.font = "34px Segoe UI Semibold";
             ctx.fillStyle = "white";
-            ctx.fillText(homeName, 247 - ctx.measureText(homeName).width, 50);
-            ctx.fillText(guestName, 608 - ctx.measureText(guestName).width, 50);
+            ctx.fillText(homeName, 237 - ctx.measureText(homeName).width, 50);
+            ctx.fillText(guestName, 598 - ctx.measureText(guestName).width, 50);
         }
 
         var queryParms = {};
         var homeIcon = new Image();
         var guestIcon = new Image();
-        var hasDnD = false;
         var homeName = "";
         var guestName = "";
+        var homeColor = "";
+        var guestColor = "";
         var homeTO = false;
         var guestTO = false;
-        var flagState = false;
+        var _quarter = 0;
         homeIcon.onload = function() {
             var c = document.getElementById("scoreCanvas");
             var ctx = c.getContext("2d");
@@ -348,34 +302,46 @@
             source.addEventListener('score', function(e) {
                 console.log("score update", e.data);
                 var data = JSON.parse(e.data);
-                downAndDistance(data["Dn"], data["Dt"]);
-                quarter(ordinal(data["Pd"]));
+                _quarter = ordinal(data["Pd"]);
+                console.log("Quarter: ", _quarter);
                 scores(data["Hs"], data["Gs"]);
-                showPossession(data["Hpo"], data["Gpo"]);
-                timeOuts(data["Htol"], data["Gtol"]);
-                if (data["Fl"] != flagState) {
-                    flagState = data["Fl"];
-                    throwFlag(data["Fl"]);
-                }
                 if (data["Hto"] != homeTO || data["Gto"] != guestTO) {
                     homeTO = (data["Hto"]);
                     guestTO = (data["Gto"]);
                     showTimeOut(homeTO, guestTO);
                 }
+                scores(data["Hs"], data["Gs"]);
+                if (data["Hf"] != null && data["Hb"] != null && data["Hpo"] != null && data["Gf"] != null
+                         && data["Gb"] != null && data["Gpo"] != null) {
+                    drawFoulsPanels(data["Hf"],data["Hb"],data["Hpo"],data["Gf"],data["Gb"],data["Gpo"]);
+                }
+                if (data["Htol"] && data["Gtol"]) {
+                    timeOuts(data["Htol"], data["Gtol"]);
+                }
             }, false);
             source.addEventListener('clock', function(e) {
                 console.log("clock update", e.data);
                 var clockJson = JSON.parse(e.data);
-                if (clockJson["Clk"]) {
+                if (clockJson["Clk"] && clockJson["Pck"]) {
                     var periodLoc = clockJson["Clk"].lastIndexOf(".");
-                    var resultStr = "";
+                    var clockStr = "";
                     if (periodLoc > 1) {
-                        resultStr = clockJson["Clk"].substring(0, periodLoc).trim();
+                        clockStr = clockJson["Clk"].substring(0, periodLoc).trim();
                     }
                     else {
-                        resultStr = clockJson["Clk"].trim();
+                        clockStr = clockJson["Clk"].trim();
                     }
-                    clock(resultStr);
+                    var shotClock = "";
+                    if (clockJson["Pck"]) {
+                        var periodLoc = clockJson["Pck"].lastIndexOf(".");
+                        if (periodLoc > 1) {
+                            shotClock = clockJson["Pck"].substring(periodLoc - 2, periodLoc).trim();
+                        }
+                        else {
+                            shotClock = clockJson["Pck"].trim();
+                        }
+                    }
+                    clockAndQuarter(clockStr, shotClock, _quarter);
                 }
             }, false);
             source.addEventListener('scoreboard', function(e) {
@@ -387,12 +353,6 @@
                     hideScoreboard();
                 }
             }, false);
-            source.addEventListener('hideScoreboard', function(e) {
-                console.log("Hide scoreboard");
-                hideScoreboard();
-            }, false);
-        } else {
-            setInterval( function () { loadData(); }, 500);
         }
     </script>
 </body>

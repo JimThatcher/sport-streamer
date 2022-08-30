@@ -9,6 +9,7 @@ using WebAPI.Models;
 using System.Drawing;
 using AuthenticationService.Models;
 using AuthenticationService.Managers;
+using DakAccess;
 
 namespace WebAPI.Controllers
 {
@@ -17,10 +18,22 @@ namespace WebAPI.Controllers
     public class AppController : ControllerBase
     {
         private readonly GameMgrContext _context;
+        private readonly ConsoleData _console;
 
-        public AppController(GameMgrContext context)
+        public AppController(GameMgrContext context, ConsoleData console)
         {
             _context = context;
+            _console = console;
+        }
+
+        //GET: rest/version
+        [HttpGet("version")]
+        public ActionResult<ServiceInfo> GetVersion()
+        {
+            // TODO: Read version info from assembly properties
+            ServiceInfo _version = new ServiceInfo();
+            _version.IsConsoleConnected = _console.IsConsoleConnected;
+            return _version;
         }
 
         // GET: rest/features

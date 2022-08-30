@@ -1,12 +1,14 @@
 using System;
 using System.Text.Json;
+using WebAPI.Models;
 
 namespace DakAccess
 {
 
 /*
-12:0012:00   12:0012:00    s   00:00           HOME                GUEST               HOME      GUEST        0   0 3 0 0 3 3 0 0 3           11ST 1ST Quarter  cc                     66015000418       9:00                                                                0   0   0   0   0   0 0 0                                             BALLON
+ 7:53 7:53    7:53 7:53    s           12:00:00HOME                GUEST               HOME      GUEST        0   0 3 2 0 5 3 2 0 5           11ST 1ST Quarter  cc                     11015000427 4545  0:45                               0 0                                                                                                              0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0                                                                      0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0                                                        
 */
+    /*
     public class BasketballData {
         private DakBasketball _bb;
         public BasketballData(DakBasketball bb) { _bb = bb; }
@@ -28,98 +30,57 @@ namespace DakAccess
         public string Hf { get {return _bb.HomeFouls;}}
         public string Gf { get {return _bb.GuestFouls;}}
     }
+    */
     
-    public class DakBasketball : ISportData
+    public class DakBasketball : DakDefault
     {
-        private int _maxOffset = 304;
-        private string _data;
-        private bool _clkUpdated = false;
-        private bool _dataUpdated = false;
-        private bool _teamsUpdated = false;
-        private string _lastTime = "";
-        private string _code = "1101";
-
-        public string GetDefaultData() {
-            return "12:0012:00   12:0012:00    s   00:00           HOME                GUEST               HOME      GUEST        0   0 3 0 0 3 3 0 0 3           11ST 1ST Quarter  cc                     11015000418       9:00                                                                0   0   0   0   0   0 0 0                                                   ";
+        public override string GetDefaultData() {
+            return "12:0012:00   12:0012:00    s           12:00:00HOME                GUEST               HOME      GUEST        0   0 3 2 0 5 3 2 0 5           11ST 1ST Quarter  cc                     11015000427 4545  0:45                               0 0                                                                                                              0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0                                                                      0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0    0 0                                                        ";
         }
-
-        public int MaxDataLen() {
-            return _maxOffset;
-        }
-        public string GetSportCode() {
+        /*
+        public override string GetSportCode() {
             return _code;
         }
+        */
 
-        public DakBasketball(string code) {
+        public DakBasketball(string code) : base(code) {
             _code = code;
+            _sport = "Basketball";
             _data = GetDefaultData();
         }
-
-        public void UpdateData(int dataLen, int offset, ref string data) {
-            _data = data;
-            if (offset + dataLen > _maxOffset)
-                return;
-            if (offset == 0 && dataLen > 224) {
-                _clkUpdated = true;
-                _dataUpdated = true;
-                _teamsUpdated = true;
-                _lastTime = MainClock;
-            }
-            else if ((offset == 0 && _lastTime != MainClock) || (((offset > 0) && (offset <= 31)) && ((offset + dataLen) >= 31)) || offset == 200) {
-                _clkUpdated = true;
-                _lastTime = MainClock;
-            }
-            else if (offset >= 47 && offset < 98)
-                _teamsUpdated = true;
-            else if (offset >= 107) {
-                _dataUpdated = true;
-            }
+        public override ClockData GetClockData() {
+            ClockData _clock = base.GetClockData();
+            try {
+                _clock.Pck = (long) TimeSpan.Parse("0:00:" + PlayClock).TotalSeconds * 1000;
+            } catch (Exception) {}
+            return _clock;
         }
-
-        public string GetData(ref string data) {
-            _dataUpdated = false;
-            _data = data;
-            return JsonSerializer.Serialize(new BasketballData(this));
+        public override DbScoreData GetScoreData() {
+            DbScoreData _score = base.GetScoreData();
+            _score.Hpo = HomePossession;
+            _score.Gpo = GuestPossession;
+            int _out = 0;
+            bool _ok = Int32.TryParse(HomeFouls, out _out);
+            _score.Hf = _ok ? _out : 0;
+            _ok = Int32.TryParse(GuestFouls, out _out);
+            _score.Gf = _ok ? _out : 0;
+            _score.Hb = HomeBonus;
+            _score.Gb = GuestBonus;
+            return _score;
         }
-
-        public string GetClocks(ref string data) {
-            _clkUpdated = false;
-            _data = data;
-            return JsonSerializer.Serialize(new Clocks(this.MainClock, this.PlayClock, this.TimeOutClock));
+        /*
+        public override ConsoleInfo GetConsoleInfo() {
+            ConsoleInfo _console = base.GetConsoleInfo();
+            _console.Sport = "Basketball";
+            return _console;
         }
-        public string GetTeams(ref string data) {
-            _data = data;
-            return "";
-        }
-
-        public bool ClockUpdated() { return _clkUpdated; }
-        public bool DataUpdated() { return _dataUpdated; }
-        public bool TeamsUpdated() { return _teamsUpdated; }
-
-        public string MainClock { get {return _data.Substring(5, 8).Trim();}}
+        */
         public string PlayClock {get {return _data.Substring(200, 8).Trim();}}
-        public string TimeOutClock { get {return _data.Substring(31, 8).TrimEnd();}}
-        public string HomeTeamName { get {return _data.Substring(47, 20).TrimEnd();}}
-        public string GuestTeamName { get {return _data.Substring(67, 20).TrimEnd();}}
-        public string HomeTeamShort { get {return _data.Substring(87, 10).TrimEnd();}}
-        public string GuestTeamShort { get {return _data.Substring(97, 10).TrimEnd();}}
-        public string HomeScore { get {return _data.Substring(107, 4).TrimStart();}}
-        public string GuestScore { get {return _data.Substring(111, 4).TrimStart();}}
-        public string HomeTOL { get {return _data.Substring(121, 2).TrimStart();}}
-        public string GuestTOL { get {return _data.Substring(129, 2).TrimStart();}}
-        public string HomeTimeOut { get {return _data.Substring(132, 4).TrimStart();}}
-        public string GuestTimeOut { get {return _data.Substring(137, 4).TrimStart();}}
-        public bool HomeTimeOutTrue { get {return (_data.Substring(131, 1) == "<") ? true : false;}}
-        public bool GuestTimeOutTrue { get {return (_data.Substring(136, 1) == ">") ? true : false;}}
-        public string PeriodNum { get {return _data.Substring(141, 2).TrimStart();}}
-        public string PeriodOrd { get {return _data.Substring(143, 4).TrimEnd();}}
-        public string PeriodText { get {return _data.Substring(147, 12).TrimEnd();}}
         public bool HomePossession { get {return (_data.Substring(209, 1) == "<") ? true : false;}}
         public bool GuestPossession { get {return (_data.Substring(215, 1) == ">") ? true : false;}}
         public bool HomeBonus { get {return (_data.Substring(221, 1) == "<") ? true : false;}}
         public bool GuestBonus { get {return (_data.Substring(228, 1) == ">") ? true : false;}}
         public string HomeFouls { get {return _data.Substring(235, 2).TrimStart();}}
         public string GuestFouls { get {return _data.Substring(237, 2).TrimStart();}}
-        public string Dump() { return _data; }  
     }
 }

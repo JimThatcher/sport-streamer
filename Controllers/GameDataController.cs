@@ -15,6 +15,7 @@ namespace WebAPI.Controllers
     public class GameDataController : ControllerBase
     {
         private readonly GameMgrContext _context;
+        private string? _webRoot;
 
         private string AddAlpha(string color) {
             string baseColor = color;
@@ -37,7 +38,10 @@ namespace WebAPI.Controllers
 
         public GameDataController(GameMgrContext context)
         {
+#pragma warning disable 8600
             _context = context;
+            _webRoot = (string) AppDomain.CurrentDomain.GetData("WebRootPath");
+#pragma warning restore 8600
         }
 
         // GET: rest/db/gamesraw
@@ -116,14 +120,14 @@ namespace WebAPI.Controllers
           {
             return BadRequest("Invalid image type");
           }
-          var webRootPath = (string) AppDomain.CurrentDomain.GetData("WebRootPath");
-          if (webRootPath == null)
+          // var webRootPath = (string) AppDomain.CurrentDomain.GetData("WebRootPath");
+          if (_webRoot == null)
           {
             return StatusCode(StatusCodes.Status500InternalServerError, "No WebRootPath found");
           }
           // TODO: Allow app configuration of image directory.
           // TODO: Allow upload of multiple images.
-          var path = Path.Combine(webRootPath, "Images", imageName);
+          var path = Path.Combine(_webRoot, "Images", imageName);
           using (var stream = new FileStream(path, FileMode.Create))
           {
             await image.CopyToAsync(stream);

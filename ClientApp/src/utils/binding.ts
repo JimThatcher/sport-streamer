@@ -4,6 +4,11 @@ type UpdateEntity<S> = (
 
 export const numberValue = (value: number) => isNaN(value) ? "" : value.toString();
 
+export const numbersOnly = (value: string) => { 
+  var numOnly = value.replace(/\D/g,'');
+  console.log("Numbers: ", numOnly);
+  return isNaN(parseInt(numOnly)) ? "" : value.toString();}
+
 export const extractEventValue = (event: React.ChangeEvent<HTMLInputElement>) => {
   switch (event.target.type) {
     case "number":

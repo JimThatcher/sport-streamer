@@ -1,3 +1,4 @@
+using WebAPI.Models;
 // Implement this interface to tell the app how to parse a specific sport data from
 // the Daktronics All Sport 5000 scoreboard controller console.
 namespace DakAccess
@@ -6,13 +7,11 @@ namespace DakAccess
     {
         public string GetSportCode();
         // Return the console sport code for this sport (From Daktronics console template)
-        public int MaxDataLen();
+        // public int MaxDataLen();
         // Return the zero-based offset of end of data for this sport
         public string GetDefaultData();
         // Return a default string for this sport to avoid uninitialized responses prior to console providing full update
-        public string GetData(ref string data);
-        // Return JSON object with all game-related data of interest
-        public string GetClocks(ref string data);
+        // public string GetClocks(ref string data);
         // Return JSON object with all game clocks (main period clock, play/shot clock, and time-out clock)
         public string GetTeams(ref string data);
         // Return JSON with team names and team abbreviations
@@ -25,5 +24,11 @@ namespace DakAccess
         // Return true if any elements returned in GetData have changed since last call to GetData
         public bool TeamsUpdated();
         // Return true if the team names have changes since last call to GetTeams
+        public ClockData GetClockData();
+        // Return a ClockData object representing the current score to be sent to the database
+        public DbScoreData GetScoreData();
+        // Return a ScoreData object representing the current score to be inserted into the database
+        public ConsoleInfo GetConsoleInfo();
+        // Return a ConsoleInfo object representing the current connection to the scoreboard console
     }
 }

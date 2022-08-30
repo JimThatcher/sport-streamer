@@ -83,7 +83,7 @@ export interface PlayerData {
   jersey: number;
   image: string;
   position: string;
-  height: number;
+  height: string;
   weight: number;
   year: number;
   school: string;

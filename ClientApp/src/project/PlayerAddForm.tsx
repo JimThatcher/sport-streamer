@@ -8,18 +8,23 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import SaveIcon from '@mui/icons-material/Save';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 
-import { SectionContent, ButtonRow } from '../components';
-import { updateValue, extractErrorMessage } from '../utils';
+import { SectionContent, ButtonRow, ValidatedTextField } from '../components';
+import { numberValue, updateValue, useRestParam, extractErrorMessage } from '../utils';
 
 import * as DbApi from './api';
 import { PlayerData } from './types';
+import { PLAYER_DATA_VALIDATOR } from './validators';
+import { ValidateFieldsError } from 'async-validator';
+import { validate } from "../validators";
+
 
 const PlayerAddForm: FC = () => {
   const { enqueueSnackbar } = useSnackbar();
   console.log("Loading PlayerAddForm");
   const [saving, setSaving] = useState<boolean>(false);
-  const [data, setData] = useState<PlayerData>({id:0, name:"", jersey:0, image:"", position:"", school:"", height:0, weight:0, year:0});
+  const [data, setData] = useState<PlayerData>({id:0, name:"", jersey:0, image:"", position:"", school:"", height:"", weight:0, year:0});
   // const [errorMessage, setErrorMessage] = useState<string>();
+  const [fieldErrors, setFieldErrors] = useState<ValidateFieldsError>();
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [filename, setFilename] = useState<string | undefined>(undefined);
 
@@ -53,6 +58,18 @@ const PlayerAddForm: FC = () => {
     }
   };
 
+  const validateAndSubmit = async () => {
+    try {
+      setFieldErrors(undefined);
+      await validate(PLAYER_DATA_VALIDATOR(data), data);
+      processSave();
+    } catch (errors: any) {
+      setFieldErrors(errors);
+      console.log("errors", errors);
+      // enqueueSnackbar(errors, { variant: "warning" });
+    }
+  };
+
   const doUpload = async () => {
     const fileData = new FormData();
     console.log("File is %s", uploadFile?.name);
@@ -80,7 +97,8 @@ const PlayerAddForm: FC = () => {
   const content = () => {
     return (
       <>
-        <TextField
+        <ValidatedTextField
+          fieldErrors={fieldErrors}
           name="name"
           label="Name"
           fullWidth
@@ -89,13 +107,13 @@ const PlayerAddForm: FC = () => {
           onChange={updateFormValue}
           margin="normal"
         />
-        <TextField
+        <ValidatedTextField
+          fieldErrors={fieldErrors}
           name="jersey"
-          label="Jersey"
-          type="number"
+          label="Jersey number (0-199)"
           fullWidth
           variant="outlined"
-          value={data.jersey}
+          value={numberValue(data.jersey)}
           onChange={updateFormValue}
           margin="normal"
         />
@@ -119,6 +137,7 @@ const PlayerAddForm: FC = () => {
                 setUploadFile(e.target.files.item(0));
                 updateFormValue(e);
                 setFilename(e.target.files.item(0)?.name);
+                // TODO: If file is a PNG, and file size is less than 1MB, then upload file.
               }
             }}
           >
@@ -135,7 +154,8 @@ const PlayerAddForm: FC = () => {
               Upload
           </Button>
         </Stack>
-        <TextField
+        <ValidatedTextField
+          fieldErrors={fieldErrors}
           name="position"
           label="Position"
           fullWidth
@@ -144,37 +164,38 @@ const PlayerAddForm: FC = () => {
           onChange={updateFormValue}
           margin="normal"
         />
-        <TextField
+        <ValidatedTextField
+          fieldErrors={fieldErrors}
           name="height"
           label="Height (in inches)"
           fullWidth
-          type="number"
           variant="outlined"
           value={data.height}
           onChange={updateFormValue}
           margin="normal"
         />
-        <TextField
+        <ValidatedTextField
+          fieldErrors={fieldErrors}
           name="weight"
           label="Weight"
           fullWidth
-          type="number"
           variant="outlined"
-          value={data.weight}
+          value={numberValue(data.weight)}
           onChange={updateFormValue}
           margin="normal"
         />
-        <TextField
+        <ValidatedTextField
+          fieldErrors={fieldErrors}
           name="year"
           label="Year (number)"
           fullWidth
-          type="number"
           variant="outlined"
-          value={data.year}
+          value={numberValue(data.year)}
           onChange={updateFormValue}
           margin="normal"
         />
-        <TextField
+        <ValidatedTextField
+          fieldErrors={fieldErrors}
           name="school"
           label="School/Team"
           fullWidth
@@ -187,7 +208,7 @@ const PlayerAddForm: FC = () => {
           <Button startIcon={<CancelIcon />} disabled={saving} variant="contained" color="primary" type="button" onClick={goBack}>
             Cancel
           </Button>
-          <Button startIcon={<SaveIcon />} disabled={saving} variant="contained" color="primary" type="submit" onClick={processSave}>
+          <Button startIcon={<SaveIcon />} disabled={saving} variant="contained" color="primary" type="submit" onClick={validateAndSubmit}>
             Save
           </Button>
         </ButtonRow>

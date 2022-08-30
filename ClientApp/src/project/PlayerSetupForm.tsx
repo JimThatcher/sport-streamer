@@ -1,22 +1,27 @@
 import { FC, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Button, TextField } from '@mui/material';
+import { Avatar, Button, Stack, TextField } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Cancel';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 
-import { SectionContent, FormLoader, ButtonRow } from '../components';
-import { updateValue, useRestParam, extractErrorMessage } from '../utils';
+import { SectionContent, FormLoader, ButtonRow, ValidatedTextField } from '../components';
+import { numberValue, updateValue, useRestParam, extractErrorMessage } from '../utils';
 
 import * as DbApi from './api';
 import { PlayerData } from './types';
 import { PlayerContext } from './OverlayAssetsContext';
 import { useSnackbar } from 'notistack';
+import { PLAYER_IMAGE_PATH } from './projConfig';
+import { PLAYER_DATA_VALIDATOR } from './validators';
+import { ValidateFieldsError } from 'async-validator';
+import { validate } from "../validators";
 
 const PlayerSetupForm: FC = () => {
   const { selectedPlayer, deselectPlayer } = useContext(PlayerContext);
   const [initialized, setInitialized] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<ValidateFieldsError>();
   var playerId = selectedPlayer ? selectedPlayer.id.toString() : "1";
 
   const {
@@ -58,6 +63,20 @@ const PlayerSetupForm: FC = () => {
     navigate('../list');
   };
 
+  const validateAndSubmit = async () => {
+    try {
+      setFieldErrors(undefined);
+      if (data) {
+        await validate(PLAYER_DATA_VALIDATOR(data), data);
+        processSave();
+      } else {
+        enqueueSnackbar("No player data", { variant: "warning" });
+      }
+    } catch (errors: any) {
+      setFieldErrors(errors);
+    }
+  };
+
   const processDelete = async () => {
     console.log("Player to delete: %d", data?.id);
     if (data) {
@@ -86,7 +105,8 @@ const PlayerSetupForm: FC = () => {
 
     return (
       <>
-        <TextField
+        <ValidatedTextField
+          fieldErrors={fieldErrors}
           name="name"
           label="Name"
           fullWidth
@@ -95,26 +115,31 @@ const PlayerSetupForm: FC = () => {
           onChange={updateFormValue}
           margin="normal"
         />
-        <TextField
+        <ValidatedTextField
+          fieldErrors={fieldErrors}
           name="jersey"
-          label="Jersey"
-          type="number"
+          label="Jersey number (0-199)"
           fullWidth
           variant="outlined"
-          value={data.jersey}
+          value={numberValue(data.jersey)}
           onChange={updateFormValue}
           margin="normal"
         />
-        <TextField
-          name="image"
-          label="Player image file"
-          fullWidth
-          variant="outlined"
-          value={data.image}
-          onChange={updateFormValue}
-          margin="normal"
-        />
-        <TextField
+        <Stack direction="row" spacing={1}>
+          <Avatar src={PLAYER_IMAGE_PATH + data.image} variant="square" >
+          </Avatar>
+          <TextField
+            name="image"
+            label="Player image file"
+            fullWidth
+            variant="outlined"
+            value={data.image}
+            onChange={updateFormValue}
+            margin="normal"
+          />
+        </Stack>
+        <ValidatedTextField
+          fieldErrors={fieldErrors}
           name="position"
           label="Position"
           fullWidth
@@ -123,37 +148,38 @@ const PlayerSetupForm: FC = () => {
           onChange={updateFormValue}
           margin="normal"
         />
-        <TextField
+        <ValidatedTextField
+          fieldErrors={fieldErrors}
           name="height"
-          label="Height (in inches)"
+          label={"Height (e.g. 6'2\")"}
           fullWidth
-          type="number"
           variant="outlined"
           value={data.height}
           onChange={updateFormValue}
           margin="normal"
         />
-        <TextField
+        <ValidatedTextField
+          fieldErrors={fieldErrors}
           name="weight"
           label="Weight"
           fullWidth
-          type="number"
           variant="outlined"
-          value={data.weight}
+          value={numberValue(data.weight)}
           onChange={updateFormValue}
           margin="normal"
         />
-        <TextField
+        <ValidatedTextField
+          fieldErrors={fieldErrors}
           name="year"
-          label="Year (number)"
+          label="Year"
           fullWidth
-          type="number"
           variant="outlined"
-          value={data.year}
+          value={numberValue(data.year)}
           onChange={updateFormValue}
           margin="normal"
         />
-        <TextField
+        <ValidatedTextField
+          fieldErrors={fieldErrors}
           name="school"
           label="School/Team"
           fullWidth
@@ -169,7 +195,7 @@ const PlayerSetupForm: FC = () => {
           <Button startIcon={<DeleteIcon />} disabled={saving} variant="contained" color="primary" type="button" onClick={processDelete}>
             Delete
           </Button>
-          <Button startIcon={<SaveIcon />} disabled={saving} variant="contained" color="primary" type="submit" onClick={processSave}>
+          <Button startIcon={<SaveIcon />} disabled={saving} variant="contained" color="primary" type="submit" onClick={validateAndSubmit}>
             Save
           </Button>
         </ButtonRow>
