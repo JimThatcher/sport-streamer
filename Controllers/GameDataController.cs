@@ -107,7 +107,7 @@ namespace WebAPI.Controllers
             _context.Schools.Add(school);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetGameConfig), new { id = school.id }, school);
+            return CreatedAtAction(nameof(GetSchool), new { id = school.id }, school);
         }
 
         // POST: rest/db/logo/{imageName}
@@ -151,7 +151,7 @@ namespace WebAPI.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!GameConfigExists(id))
+                if (_context.Schools == null || !_context.Schools.Any(e => e.id == id))
                 {
                     return NotFound();
                 }
@@ -160,7 +160,6 @@ namespace WebAPI.Controllers
                     throw;
                 }
             }
-
             return Ok(school);
         }
 
@@ -228,17 +227,17 @@ namespace WebAPI.Controllers
             if (_context.GameView == null) {
                 return NotFound();
             }
-            var gameConfig = await _context.GameView.FindAsync(id);
+            var gameView = await _context.GameView.FindAsync(id);
 
-            if (gameConfig == null)
+            if (gameView == null)
             {
                 return NotFound();
             }
-            if (gameConfig.HomeColor.Length < 9)
-                gameConfig.HomeColor = AddAlpha(gameConfig.HomeColor);
-            if (gameConfig.GuestColor.Length < 9)
-                gameConfig.GuestColor = AddAlpha(gameConfig.GuestColor);
-            return gameConfig;
+            if (gameView.HomeColor.Length < 9)
+                gameView.HomeColor = AddAlpha(gameView.HomeColor);
+            if (gameView.GuestColor.Length < 9)
+                gameView.GuestColor = AddAlpha(gameView.GuestColor);
+            return gameView;
         }
 
         // GET: rest/db/game/5
@@ -268,17 +267,17 @@ namespace WebAPI.Controllers
             if (_context.TempGame == null) {
                 return NotFound();
             }
-            var gameConfig = await _context.TempGame.Where(h => h.homeId == homeId).Where(a => a.awayId == guestId).FirstOrDefaultAsync();
+            var tempGame = await _context.TempGame.Where(h => h.homeId == homeId).Where(a => a.awayId == guestId).FirstOrDefaultAsync();
 
-            if (gameConfig == null)
+            if (tempGame == null)
             {
                 return NotFound();
             }
-            if (gameConfig.HomeColor.Length < 9)
-                gameConfig.HomeColor = AddAlpha(gameConfig.HomeColor);
-            if (gameConfig.GuestColor.Length < 9)
-                gameConfig.GuestColor = AddAlpha(gameConfig.GuestColor);
-            return gameConfig;
+            if (tempGame.HomeColor.Length < 9)
+                tempGame.HomeColor = AddAlpha(tempGame.HomeColor);
+            if (tempGame.GuestColor.Length < 9)
+                tempGame.GuestColor = AddAlpha(tempGame.GuestColor);
+            return tempGame;
         }
 
         // PUT: rest/db/game/5
@@ -298,7 +297,7 @@ namespace WebAPI.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!GameConfigExists(id))
+                if (_context.Games == null || !_context.Games.Any(e => e.id == id))
                 {
                     return NotFound();
                 }
@@ -322,7 +321,7 @@ namespace WebAPI.Controllers
             _context.Games.Add(game);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetGameConfig), new { id = game.id }, game);
+            return CreatedAtAction(nameof(GetGameView), new { id = game.id }, game);
         }
 
         // DELETE: rest/db/game/5
@@ -342,14 +341,6 @@ namespace WebAPI.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        private bool GameConfigExists(long id)
-        {
-            if (_context.GameSetup == null) {
-                return false;
-            }
-            return _context.GameSetup.Any(e => e.Id == id);
         }
     }
 }
