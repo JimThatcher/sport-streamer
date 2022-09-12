@@ -36,16 +36,18 @@ namespace DakAccess
             _sport = "Hockey";
             _data = GetDefaultData();
         }
+        /*
         public override DbScoreData GetScoreData() {
             DbScoreData _score = base.GetScoreData();
-            _score.Hpn = HomePenaltyTrue;
-            _score.Gpn = GuestPenaltyTrue;
-            _score.Hto = HomeTimeOutTrue;
-            _score.Gto = GuestTimeOutTrue;
+            // _score.Hpn = HomePenaltyTrue;
+            // _score.Gpn = GuestPenaltyTrue;
+            // _score.Hto = HomeTimeOutTrue;
+            // _score.Gto = GuestTimeOutTrue;
             return _score;
         }
-        public bool HomePenaltyTrue { get {return (_data.Substring(345, 1) == "<") ? true : false;}}
-        public bool GuestPenaltyTrue { get {return (_data.Substring(353, 1) == ">") ? true : false;}}
+        */
+        // public bool HomePenaltyTrue { get {return (_data.Substring(345, 1) == "<") ? true : false;}}
+        // public bool GuestPenaltyTrue { get {return (_data.Substring(353, 1) == ">") ? true : false;}}
         public string HomePenaltyText { get {return (_data.Substring(346, 7).Trim());}}
         public string GuestPenaltyText { get {return (_data.Substring(354, 7).Trim());}}
     }

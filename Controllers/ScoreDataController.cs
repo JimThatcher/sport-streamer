@@ -36,13 +36,13 @@ namespace WebAPI.Controllers
             }
         }
 
-        public async void UpdateBrowserClients(DbScoreData scoreData)
+        public Task UpdateBrowserClients(DbScoreData scoreData)
         {
             ServerSentEvent sse = new ServerSentEvent();
             sse.Type = "score";
             // var scoreData = await _context.ScoreboardData.FindAsync((long) 1);
             sse.Data = new List<string>(new string[] {JsonSerializer.Serialize(scoreData)} );
-            await _sseService.SendEventAsync(sse);
+            return _sseService.SendEventAsync(sse);
         }
 
         // GET: api/score
@@ -126,7 +126,7 @@ namespace WebAPI.Controllers
                     throw;
                 }
             }
-            UpdateBrowserClients(scoreData);
+            await UpdateBrowserClients(scoreData);
             return scoreData;
         }
 
@@ -170,7 +170,7 @@ namespace WebAPI.Controllers
             var tasks = new[] {
                 Task.Run(() => WaitAndResetFlag())
             };
-            UpdateBrowserClients(scoreData);
+            await UpdateBrowserClients(scoreData);
             return scoreData;
         }
 
@@ -203,7 +203,7 @@ namespace WebAPI.Controllers
             catch (DbUpdateConcurrencyException)
             {
             }
-            UpdateBrowserClients(scoreData);
+            await UpdateBrowserClients(scoreData);
         }
 
         // GET: api/score/TimeOut/Home
@@ -250,7 +250,7 @@ namespace WebAPI.Controllers
             var tasks = new[] {
                 Task.Run(() => WaitAndResetFlag())
             };
-            UpdateBrowserClients(scoreData);
+            await UpdateBrowserClients(scoreData);
             return scoreData;
         }
 
@@ -298,7 +298,7 @@ namespace WebAPI.Controllers
                     throw;
                 }
             }
-            UpdateBrowserClients(scoreData);
+            await UpdateBrowserClients(scoreData);
             return scoreData;
         }
 
@@ -336,7 +336,7 @@ namespace WebAPI.Controllers
                     throw;
                 }
             }
-            UpdateBrowserClients(scoreData);
+            await UpdateBrowserClients(scoreData);
             return scoreData;
         }
 
@@ -376,7 +376,7 @@ namespace WebAPI.Controllers
                     throw;
                 }
             }
-            UpdateBrowserClients(scoreData);
+            await UpdateBrowserClients(scoreData);
             return scoreData;
         }
 
@@ -416,7 +416,7 @@ namespace WebAPI.Controllers
                     throw;
                 }
             }
-            UpdateBrowserClients(scoreData);
+            await UpdateBrowserClients(scoreData);
             return scoreData;
         }
 
@@ -463,7 +463,7 @@ namespace WebAPI.Controllers
                     throw;
                 }
             }
-            UpdateBrowserClients(scoreData);
+            await UpdateBrowserClients(scoreData);
             return scoreData;
         }
 
@@ -511,7 +511,7 @@ namespace WebAPI.Controllers
                     throw;
                 }
             }
-            UpdateBrowserClients(scoreData);
+            await UpdateBrowserClients(scoreData);
             return scoreData;
         }
 
@@ -559,7 +559,7 @@ namespace WebAPI.Controllers
                     throw;
                 }
             }
-            UpdateBrowserClients(scoreData);
+            await UpdateBrowserClients(scoreData);
             return scoreData;
         }
 
@@ -608,7 +608,7 @@ namespace WebAPI.Controllers
                     throw;
                 }
             }
-            UpdateBrowserClients(scoreData);
+            await UpdateBrowserClients(scoreData);
             return scoreData;
         }
 
@@ -622,7 +622,7 @@ namespace WebAPI.Controllers
             _context.ScoreboardData.Add(scoreData);
             await _context.SaveChangesAsync();
             
-            UpdateBrowserClients(scoreData);
+            await UpdateBrowserClients(scoreData);
 
             return CreatedAtAction(nameof(GetScoreData), new { id = scoreData.id }, scoreData);
         }

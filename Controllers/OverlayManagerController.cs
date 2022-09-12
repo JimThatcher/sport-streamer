@@ -25,41 +25,41 @@ namespace WebAPI.Controllers
         this.weight = 0;
         this.school = string.Empty;
       }
-        public Player2(Player player) {
-            this.id = player.id;
-            this.jersey = player.jersey;
-            this.name = player.name;
-            this.position = player.position;
-            this.image = player.image;
-            this.year = player.year;
-            this.height = string.Format("{0}'{1}\"", player.height / 12, player.height % 12);
-            this.weight = player.weight;
-            this.school = player.school;
-        }
-        public Player getPlayer() {
-            Player player = new Player();
-            player.id = this.id;
-            player.jersey = this.jersey;
-            player.name = this.name;
-            player.position = this.position;
-            player.image = this.image;
-            player.year = this.year;
-            player.weight = this.weight;
-            player.school = this.school;
-            int nFt = this.height.IndexOf("'");
-            int nIn = this.height.IndexOf("\"");
-            player.height = (12 * int.Parse(this.height.Substring(0, nFt))) + int.Parse(this.height.Substring(nFt + 1, nIn - nFt - 1));
-            return player;
-        }
-        public long id { get; set; }
-        public long jersey { get; set; }
-        public string name { get; set; } = string.Empty;
-        public string position { get; set; } = string.Empty;
-        public string image { get; set; } = string.Empty;
-        public int year { get; set; }
-        public string height { get; set; } = string.Empty;
-        public int weight { get; set; }
-        public string school {get; set;} = string.Empty;
+      public Player2(Player player) {
+          this.id = player.id;
+          this.jersey = player.jersey;
+          this.name = player.name;
+          this.position = player.position;
+          this.image = player.image;
+          this.year = player.year;
+          this.height = string.Format("{0}'{1}\"", player.height / 12, player.height % 12);
+          this.weight = player.weight;
+          this.school = player.school;
+      }
+      public Player getPlayer() {
+          Player player = new Player();
+          player.id = this.id;
+          player.jersey = this.jersey;
+          player.name = this.name;
+          player.position = this.position;
+          player.image = this.image;
+          player.year = this.year;
+          player.weight = this.weight;
+          player.school = this.school;
+          int nFt = this.height.IndexOf("'");
+          int nIn = this.height.IndexOf("\"");
+          player.height = (12 * int.Parse(this.height.Substring(0, nFt))) + int.Parse(this.height.Substring(nFt + 1, nIn - nFt - 1));
+          return player;
+      }
+      public long id { get; set; }
+      public long jersey { get; set; }
+      public string name { get; set; } = string.Empty;
+      public string position { get; set; } = string.Empty;
+      public string image { get; set; } = string.Empty;
+      public int year { get; set; }
+      public string height { get; set; } = string.Empty;
+      public int weight { get; set; }
+      public string school {get; set;} = string.Empty;
     }
 
 
@@ -127,12 +127,19 @@ namespace WebAPI.Controllers
         // GET: rest/db/players
         // Returns a list of all Players currently in the Players table.
         [HttpGet("players")]
-        public async Task<ActionResult<IEnumerable<PlayerSorted>>> GetPlayers()
+        public async Task<ActionResult<IEnumerable<Player>>> GetPlayers()
         {
+          if (_context.Players == null) {
+            return NotFound();
+          }
+          var players = await _context.Players.OrderBy(p => p.school).ThenBy(p => p.jersey).ToListAsync();
+          return players;
+          /*
           if (_context.Teams == null) {
             return NotFound();
           }
           return await _context.Teams.ToListAsync();
+          */
         }
 
         // GET: rest/db/player/5
@@ -252,8 +259,8 @@ namespace WebAPI.Controllers
               await _gameContext.SaveChangesAsync();
               ServerSentEvent evt = new ServerSentEvent();
               evt.Type = "hilight";
-              string jsonMsg = string.Format("{{\"id\":{0},\"jersey\":{1}, \"name\":\"{2}\", \"image\":\"{3}\", \"requester\":\"{4}\"}}", 
-                                              player.id, player.jersey, player.name, player.image, item.requester);
+              string jsonMsg = JsonSerializer.Serialize(player); /* string.Format("{{\"id\":{0},\"jersey\":{1}, \"name\":\"{2}\", \"image\":\"{3}\", \"requester\":\"{4}\"}}", 
+                                              player.id, player.jersey, player.name, player.image, item.requester); */
               evt.Data = new List<string>(new string[] {jsonMsg});
               await _sseService.SendEventAsync(evt);
               return Ok(player);

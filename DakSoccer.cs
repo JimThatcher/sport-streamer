@@ -34,13 +34,15 @@ namespace DakAccess
             _sport = "Soccer";
             _data = GetDefaultData();
         }
+        /*
         public override DbScoreData GetScoreData() {
             DbScoreData _score = base.GetScoreData();
             _score.Hpo = HomePossession;
             _score.Gpo = GuestPossession;
             return _score;
         }
-        public bool HomePossession { get {return (_data.Substring(200, 1) == "<") ? true : false;}}
-        public bool GuestPossession { get {return (_data.Substring(205, 1) == ">") ? true : false;}}
+        */
+        // public bool HomePossession { get {return (_data.Substring(200, 1) == "<") ? true : false;}}
+        // public bool GuestPossession { get {return (_data.Substring(205, 1) == ">") ? true : false;}}
     }
 }

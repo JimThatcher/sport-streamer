@@ -84,7 +84,7 @@ namespace DakAccess
             // _clockJson = "";
             // _scoreJson = "";
         }
-        private void SseService_ClientConnected(object? sender, ServerSentEventsClientConnectedArgs e)
+        private async void SseService_ClientConnected(object? sender, ServerSentEventsClientConnectedArgs e)
         {
             HttpRequest request = e.Request; 
             IServerSentEventsClient client = e.Client;
@@ -93,13 +93,11 @@ namespace DakAccess
             evt.Type = "clock";
             evt.Data = new List<string>(new string[] {GetClockFromDatabase()});
             _logger.LogInformation("Sending clock: " + evt.Data[0]);
-            // _sseService.SendEventAsync(evt);
-            client.SendEventAsync(evt);
+            await client.SendEventAsync(evt);
             evt.Type = "score";
             evt.Data = new List<string>(new string[] {GetScoreFromDatabase()});
             _logger.LogInformation("Sending score: " + evt.Data[0]);
-            // _sseService.SendEventAsync(evt);
-            client.SendEventAsync(evt);
+            await client.SendEventAsync(evt);
             // TODO: Send Teams to client also.
         }
         private void SseService_ClientDisconnected(object? sender, ServerSentEventsClientDisconnectedArgs e)
@@ -121,7 +119,7 @@ namespace DakAccess
                 _clockTimer.Change(Timeout.Infinite, Timeout.Infinite);
             }
         }
-        private void ManualClockTimer_Tick(object? state) {
+        private async void ManualClockTimer_Tick(object? state) {
             // Check if we have a console connected. There is no reason to post manual clock SSE updates
             // if we have a console connected.
             if (!_ConnectedToConsole) {
@@ -129,7 +127,7 @@ namespace DakAccess
                 ServerSentEvent evt = new ServerSentEvent();
                 evt.Type = "clock";
                 evt.Data = new List<string>(new string[] {GetClockFromDatabase()});
-                _sseService.SendEventAsync(evt);
+                await _sseService.SendEventAsync(evt);
             }
         }
 
@@ -305,6 +303,7 @@ namespace DakAccess
                 case "6105":
                 case "6402":
                 case "6501":
+                case "    ": // If the console is not producing a sport code, we assume football because we are biased that way ;-)
                     return new DakFootball(code);
                 case "1101":
                 case "1102":
@@ -340,7 +339,7 @@ namespace DakAccess
 
         }
 
-        private void ReadDataFromSerial(SerialPort port)
+        private async void ReadDataFromSerial(SerialPort port)
         {
             string allData = new string(' ', 511); // Will hold the full info from the console
             try {
@@ -439,6 +438,17 @@ namespace DakAccess
                                     }
                                     if (checkMatches) {
                                         _LastDataReceived = DateTime.Now;
+                                        // Temporarily blank out sport code and console data for testing
+                                        // TODO: Remove this when we are ready to go live
+                                        if (updateText.Length > 187) {
+                                            if (updateText.Length > 193) {
+                                                updateText = updateText.Remove(183, 11);
+                                                updateText = updateText.Insert(183, "           ");
+                                            } else {
+                                                updateText = updateText.Remove(183, 4);
+                                                updateText = updateText.Insert(183, "    ");
+                                            }
+                                        }
                                         if (updateText.Length > 187 && dakData.GetSportCode() != updateText.Substring(183, 4)) {
                                             // The console is set to a different sport than previous setting
                                             // This allows the parser to automatically adapt to changes in the
@@ -479,7 +489,7 @@ namespace DakAccess
                                                 ServerSentEvent evt = new ServerSentEvent();
                                                 evt.Type = "clock";
                                                 evt.Data = new List<string>(new string[] {dakData.GetClockData().asJson()});
-                                                _sseService.SendEventAsync(evt);
+                                                await _sseService.SendEventAsync(evt);
                                                 _logger.LogTrace(_clock);
                                             }
                                             if (dakData.DataUpdated()) {
@@ -496,7 +506,7 @@ namespace DakAccess
                                                 ServerSentEvent evt = new ServerSentEvent();
                                                 evt.Type = "score";
                                                 evt.Data = new List<string>(new string[] {_score});
-                                                _sseService.SendEventAsync(evt);
+                                                await _sseService.SendEventAsync(evt);
                                                 _logger.LogTrace(_score);
                                             }
                                         }

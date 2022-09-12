@@ -36,6 +36,7 @@ namespace WebAPI.Models
         public int weight { get; set; }
         public string school {get; set;} = string.Empty;
     }
+    /*
     [Table("Teams")]
     public class PlayerSorted
     {
@@ -56,6 +57,7 @@ namespace WebAPI.Models
         public int weight { get; set; }
         public string school {get; set;} = string.Empty;
     }
+    */
     public class Sponsor
     {
         public long id { get; set; }

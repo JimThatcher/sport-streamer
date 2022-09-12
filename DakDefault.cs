@@ -42,6 +42,7 @@ namespace DakAccess
 
         public DakDefault(string code) {
             _code = code;
+            _sport = "Unknown";
             _data = GetDefaultData();
         }
 
@@ -81,8 +82,11 @@ namespace DakAccess
             ClockData _clock = new ClockData();
             try {
                 _clock.Clk = (long) TimeSpan.Parse("0:" + MainClock).TotalSeconds * 1000;
+
             } catch (Exception) {}
-            _clock.Pck = 0;
+            try {
+                _clock.Pck = (long) TimeSpan.Parse("0:00:" + PlayClock).TotalMilliseconds;
+            } catch (Exception) {}
             _clock.Id = 1;
             _clock.isRunning = ClockIsRunning;
             _clock.lastChange = DateTime.UtcNow;
@@ -103,8 +107,20 @@ namespace DakAccess
             _score.Htol = _ok ? _out : 0;
             _ok = Int32.TryParse(GuestTOL, out _out);
             _score.Gtol = _ok ? _out : 0;
-            _score.Hpo = false;
-            _score.Gpo = false;
+            _score.Hto = HomeTimeOutTrue;
+            _score.Gto = GuestTimeOutTrue;
+            _score.Hpo = HomePossession;
+            _score.Gpo = GuestPossession;
+            _score.Dn = Down;
+            _score.Dt = Distance;
+            _score.BO = BallOn;
+            _score.Fl = Flag;
+            _score.Hb = HomeBonus;
+            _score.Gb = GuestBonus;
+            _score.Hf = HomeFouls;
+            _score.Gf = GuestFouls;
+            _score.Hpn = HomePenaltyTrue;
+            _score.Gpn = GuestPenaltyTrue;
             _dataUpdated = false;
             return _score;
         }
@@ -117,7 +133,7 @@ namespace DakAccess
             _console.FirmwareVersion = ConsoleFirmware;
             return _console;
         }
-
+        // Common to all Daktronics sports with clock
         public string MainClock { get {return _data.Substring(5, 8).Trim();}}
         public bool ClockIsRunning { get {return (_data.Substring(27, 1) != "s") ? true : false; }}
         public string TimeOutClock { get {return _data.Substring(31, 8).TrimEnd();}}
@@ -136,6 +152,140 @@ namespace DakAccess
         public string PeriodNum { get {return _data.Substring(141, 2).TrimStart();}}
         public string PeriodOrd { get {return _data.Substring(143, 4).TrimEnd();}}
         public string PeriodText { get {return _data.Substring(147, 12).TrimEnd();}}
+        // Sport-specific fields we will make a best attempt to parse when we don't know the sport
+        public string PlayClock { get {
+            if (_data.Substring(200, 1) == "<") {
+                _sport = "Soccer";
+                return "";
+            } else
+            return _data.Substring(200, 8).Trim();
+        }}
+        public bool HomePossession { get {
+            if (_data.Substring(200, 1) == "<") {
+                _sport = "Soccer";
+                return true;
+            } else if (_data.Substring(209, 1) == "<") {
+                // Football and Basketball
+                return true;
+            }
+            return false;
+        }}
+        public bool GuestPossession { get {
+            if (_data.Substring(214, 1) == ">") {
+                _sport = "Football";
+                return true;
+            } else if (_data.Substring(215, 1) == ">") {
+                _sport = "Basketball";
+                return true;
+            } else if (_data.Substring(205, 1) == ">") {
+                _sport = "Soccer";
+                return true;
+            } else
+                return false;
+        }}
+        public int BallOn { get {
+            int _out = 0;
+            if (int.TryParse(_data.Substring(219, 2).TrimStart(), out _out)) {
+                _sport = "Football";
+                return _out;
+            } else {
+                return 0;
+            }
+        }}
+        public int Down { get {
+            int _out = 0;
+            if (int.TryParse(_data.Substring(221, 1).TrimStart(), out _out)) {
+                _sport = "Football";
+                return _out;
+            } else {
+                return 0;
+            }
+        }}
+        public int Distance { get {
+            int _out = 0;
+            if (int.TryParse(_data.Substring(224, 2).TrimStart(), out _out)) {
+                _sport = "Football";
+                return _out;
+            } else {
+                return 0;
+            }
+        }}
+        public bool HomeBonus { get {
+            if (_data.Substring(221, 1) == "<") {
+                _sport = "Basketball";
+                return true;
+            } else
+                return false;
+        }}
+        public bool GuestBonus { get {
+            if (_data.Substring(228, 1) == ">") {
+                _sport = "Basketball";
+                return true;
+            } else
+                return false;
+        }}
+        public int HomeFouls { get {
+            int _out = 0;
+            if (int.TryParse(_data.Substring(235, 2).TrimStart(), out _out)) {
+                _sport = "Basketball";
+                return _out;
+            } else {
+                return 0;
+            }
+        }}
+        public int GuestFouls { get {
+            int _out = 0;
+            if (int.TryParse(_data.Substring(237, 2).TrimStart(), out _out)) {
+                _sport = "Basketball";
+                return _out;
+            } else {
+                return 0;
+            }
+        }}
+        public bool Flag { get {
+            if (_data.Length >= 313 && _data.Substring(310, 4) == "FLAG") {
+                _sport = "Football";
+                return true;
+            } else
+                return false;
+        }}
+        public bool HomePenaltyTrue { get {
+            if (_data.Length > 345)
+                return (_data.Substring(345, 1) == "<") ? true : false;
+            else
+                return false;
+        }}
+        public bool GuestPenaltyTrue { get {
+            if (_data.Length > 353)
+                return (_data.Substring(353, 1) == ">") ? true : false;
+            else
+                return false;
+        }}
+
+        /*
+        // Basketball details:
+        // Football details:
+        -- public string Flag { get {return _data.Substring(310, 4).Trim();}}
+        // Hockey details:
+        // Soccer details:
+        // Combined (zero-based):
+        // -- 200-208: PlayClock - public string PlayClock {get {return _data.Substring(200, 8).Trim();}}
+        // -- 200-200: HomePossession (Soccer) - public bool HomePossession { get {return (_data.Substring(200, 1) == "<") ? true : false;}}
+        // -- 205-205: GuestPossession (Soccer) - public bool HomePossession { get {return (_data.Substring(200, 1) == ">") ? true : false;}}
+        // -- 209-209: HomePossession (Foot/Basket) - public bool HomePossession { get {return (_data.Substring(209, 1) == "<") ? true : false;}}
+        // -- 214-214: GuestPossession - (Football) public bool GuestPossession { get {return (_data.Substring(214, 1) == ">") ? true : false;}}
+        // -- 215-215: GuestPossession (Basketball) - public bool GuestPossession { get {return (_data.Substring(215, 1) == ">") ? true : false;}}
+        // -- 219-220: BallOn (Football) - public string BallOn { get {return _data.Substring(219, 2).TrimStart();}}
+        // -- 221-223: Down (Football) - public string Down { get {return _data.Substring(221, 3).TrimEnd();}}
+        // -- 221-221: HomeBonus (Basketball) - public bool HomeBonus { get {return (_data.Substring(221, 1) == "<") ? true : false;}}
+        // -- 224-225: Distance (Football) - public string Distance { get {return _data.Substring(224, 2).TrimStart();}}
+        // -- 228-228: GuestBonus (Basketball) - public bool GuestBonus { get {return (_data.Substring(228, 1) == ">") ? true : false;}}
+        // -- 235-236: HomeFouls (Basketball) - public string HomeFouls { get {return _data.Substring(235, 2).TrimStart();}}
+        // -- 237-238: GuestFouls (Basketball) - public string GuestFouls { get {return _data.Substring(237, 2).TrimStart();}}
+        // -- 310-313: Flag (Football) - public string Flag { get {return _data.Substring(310, 4).Trim();}}
+        // -- 345-345: HomePenaltyTrue (Hockey) - public bool HomePenaltyTrue { get {return (_data.Substring(345, 1) == "<") ? true : false;}}
+        // -- 353-353: GuestPenaltyTrue (Hockey) - public bool GuestPenaltyTrue { get {return (_data.Substring(353, 1) == ">") ? true : false;}}
+        */
         public string ConsoleModel { get {return _data.Substring(187, 4);}}
         public string ConsoleFirmware { get {return _data.Substring(191, 3);}}
 

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=1920 height=1080">
+    <link rel="stylesheet" href="../css/uifonts.css" type="text/css" charset="utf-8"/>
+    <style type="text/css">
+        body { 
+            background-color: rgba(0, 0, 0, 0); 
+            margin: 0px auto; 
+            overflow: hidden;
+        }
+        body.hide {
+            opacity: 0;
+            transition-duration: 0.9s;
+            transition-property: opacity;
+        }
+        body.show {
+            opacity: 1;
+            transition-duration: 0.8s;
+            transition-property: opacity;
+        }
+      </style>
+</head>
+<title>Player</title>
+<body>
+    <div>
+        <div style="position: absolute; top: 0px; left: 0px; width: 1920px; height: 1080px;">
+            <canvas id="imgCanvas" width="1920" height="1080" style="border:1px solid #00000000;"></canvas>
+        </div>
+    </div>
+
+    <script>
+      // Modify these variables to customize your player highlight overlay. Your bgFile should be a png file with a transparent background
+      // and a semi-transparent dark shading across the area that the player image will be placed. The player image should be a png with a
+      // transparent background. The player image will be placed at the imgXOffset and imgYOffset coordinates. The player's name and jersey 
+      // number will be centered on the textXOffset at the textYOffset.
+      // If you want to use a different font, you can change the ctx.font and ctx.fillStyle variables below.
+      // The current code assumes that your player images have a 1:1 aspect ratio, which it resizes to 200x200px. 
+      // If you want to use a different aspect ratio, you can modify the drawImage function below.
+
+        var jerseyFont = new FontFace('MyJersey', 'url(../fonts/varsityjersey-webfont.woff2)');
+        var sairaFont = new FontFace('MySaira', 'url(../fonts/SairaCondensed-Medium.ttf)');
+        var bgFile = "PlayerBackground.png";
+        var imgXOffset = 90;
+        var imgYOffset = 550;
+        var imgHeight = 300;
+        var imgWidth = 300;
+        var textXOffset = imgXOffset + 150;
+        var textYOffset = imgYOffset + 360;
+        var numberXOffset = 80;
+        var numberYOffset = imgYOffset + 80;
+        var textFont = "70px MySaira";
+        var numberFont = "80px MyJersey";
+        var textStyle = "white";
+        var posXOffset = imgXOffset;
+        var posYOffset = textYOffset + 40; // 40 is the height of the font for the position text
+
+        var queryParms = {};
+        var playerImage = new Image();
+        var playerBackground = new Image();
+        var playerImgFile = '';
+        var playerNum = '';
+        var playerName = '';
+        var playerPos = '';
+        var imagePath = './Images/';
+        var isChanged = false;
+
+        jerseyFont.load().then(function(font) {
+            console.log('Jersey font ready');
+            document.fonts.add(font);
+        });
+
+        sairaFont.load().then(function(font) {
+            console.log('Saira font ready');
+            document.fonts.add(font);
+        });
+
+        function yrToGrade(n) {
+            var s = ["FR", "SO", "JR", "SR"];
+            return s[n-9];
+        }
+
+        function parseQuery(queryString) {
+            var query = {};
+            var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
+            for (var i = 0; i < pairs.length; i++) {
+                var pair = pairs[i].split('=');
+                query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+            }
+            return query;
+        }
+
+        function hilightPlayer(jerseyNum, plrName, imgPath, plrPos) {
+            if (jerseyNum && plrName && imgPath) {
+                isChanged = false;
+                if (String(playerNum) != String(jerseyNum)) {
+                    console.log("Player number: " + jerseyNum + ", was " + playerNum);
+                    playerNum = jerseyNum;
+                    isChanged = true;
+                }
+                if (String(playerName) != String(plrName)) {
+                    console.log("Player name: " + plrName + ", was " + playerName);
+                    playerName = plrName;
+                    isChanged = true;
+                }
+                if (String(imgPath) != String(playerImgFile)) {
+                    console.log("Player image: " + imgPath + ", was " + playerImgFile);
+                    playerImgFile = imgPath;
+                    isChanged = true;
+                }
+                playerPos = plrPos;
+                if (isChanged) {
+                    console.log("Player data changed: " + playerNum + " " + playerName + " " + playerImgFile + " " + playerPos);
+                    var c = document.getElementById("imgCanvas");
+                    var ctx = c.getContext("2d");
+                    ctx.clearRect(0, 0, c.width, c.height);
+                    document.body.classList.remove('hide');
+                    document.body.classList.add('show');
+                    playerBackground.src = imagePath + bgFile;
+                }
+            }
+        }
+
+        function clearImage() {
+            playerNum = 0;
+            playerName = '';
+            playerImgFile = '';
+            document.body.classList.remove('show');
+            document.body.classList.add('hide');
+        };
+
+        playerBackground.onload = function() {
+          var c = document.getElementById("imgCanvas");
+          var ctx = c.getContext("2d");
+          var x = 0;
+          var y = 0;
+          ctx.drawImage(playerBackground, x, y);
+          playerImage.src = imagePath + playerImgFile;
+        }
+
+        playerImage.onload = function() {
+          var c = document.getElementById("imgCanvas");
+          var ctx = c.getContext("2d");
+          var x = imgXOffset;
+          var y = imgYOffset;
+          // var xClip = (playerImage.height < playerImage.width) ? playerImage.height : playerImage.width;
+          // var yClip = playerImage.height;
+          ctx.drawImage(playerImage, x, y, imgWidth, imgHeight);
+          ctx.font = textFont;
+          ctx.fillStyle = textStyle;
+          var txt = playerName.toUpperCase();
+          var startX = Math.max(10, textXOffset - (ctx.measureText(txt).width/2));
+          ctx.fillText(txt, startX, textYOffset);
+          ctx.font = '4' + textFont.substring(1);
+          ctx.fillText(playerPos, startX, posYOffset);
+          ctx.font = numberFont;
+          ctx.fillText(playerNum, numberXOffset - (ctx.measureText(playerNum).width/2), numberYOffset);
+        }
+
+        if (!!window.EventSource) {
+            var source = new EventSource('../events');
+            source.addEventListener('open', function(e) {
+                console.log("Events Connected");
+            }, false);
+
+            source.addEventListener('error', function(e) {
+                if (e.target.readyState != EventSource.OPEN) {
+                    console.log("Events Disconnected");
+                }
+            }, false);
+
+            source.addEventListener('hilight', function(e) {
+                console.log("hilight player ", e.data);
+                var data = JSON.parse(e.data);
+                if (data.id == 0) {
+                    clearImage();
+                } else {
+                    hilightPlayer(data["jersey"], data["name"], data["image"], yrToGrade(data["year"]) + " - " + data["position"]);
+                }
+            }, false);
+        }
+    </script>
+</body>
+</html>

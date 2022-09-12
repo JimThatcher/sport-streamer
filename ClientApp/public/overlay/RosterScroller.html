@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=1920 height=1080">
+    <style type="text/css">
+        body { 
+            background-color: rgba(0, 0, 0, 0); 
+            margin: 0px auto; 
+            overflow: hidden;
+        }
+        body.hide {
+            opacity: 0;
+            transition-duration: 0.9s;
+            transition-property: opacity;
+        }
+        body.show {
+            opacity: 1;
+            transition-duration: 0.8s;
+            transition-property: opacity;
+        }
+
+        #scroll-container {
+            border: 3px solid rgba(0, 0, 0, 0);
+            overflow: hidden;
+        }
+
+        #scroll-text {
+            /* animation properties */
+            -webkit-transform: translateX(100%);
+            transform: translateX(100%);
+            
+            -webkit-animation: my-animation 15s linear infinite;
+            animation: my-animation 15s linear infinite;
+        }
+
+        /* for Chrome */
+        @-webkit-keyframes my-animation {
+            from { -webkit-transform: translateX(100%); }
+            to { -webkit-transform: translateX(-100%); }
+        }
+
+        @keyframes my-animation {
+            from {
+                -webkit-transform: translateX(100%);
+                transform: translateX(100%);
+            }
+            to {
+                -webkit-transform: translateX(-100%);
+                transform: translateX(-100%);
+            }
+        }
+
+      </style>
+</head>
+<title>Roster Scroller</title>
+<body>
+    <div>
+        <div style="position: absolute; top: 0px; left: 0px; width: 1920px; height: 1080px;">
+            <canvas id="imgCanvas" width="1920" height="1080" style="border:1px solid #00000000;"></canvas>
+            <div id="scroll-container">
+                <div id="scroll-text">This is scrolling text.<div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var rosterText = '';
+
+        function showRoster(imgPath) {
+            if (imgPath) {
+                if (String(imgPath) != String(sponsorImgFile)) {
+                    console.log("Sponsor image: " + imgPath + ", was " + sponsorImgFile);
+                    sponsorImgFile = imgPath;
+                    var ctx = c.getContext("2d");
+                    ctx.clearRect(0, 0, c.width, c.height);
+                    sponsorBackground.src = imagePath + bgFile;
+                }
+            }
+        }
+
+        function hideRoster() {
+            sponsorImgFile = '';
+            document.body.classList.remove('show');
+            document.body.classList.add('hide');
+        };
+
+        if (!!window.EventSource) {
+            var source = new EventSource('../events');
+            source.addEventListener('open', function(e) {
+                console.log("Events Connected");
+            }, false);
+
+            source.addEventListener('error', function(e) {
+                if (e.target.readyState != EventSource.OPEN) {
+                    console.log("Events Disconnected");
+                }
+            }, false);
+
+            source.addEventListener('roster', function(e) {
+                console.log("Show roster ", e.data);
+                var data = JSON.parse(e.data);
+                if (data.id == 0) {
+                    hideRoster();
+                } else {
+                    showRoster(data["image"]);
+                }
+            }, false);
+        }
+    </script>
+</body>
+</html>

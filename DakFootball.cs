@@ -84,11 +84,14 @@ namespace DakAccess
         */
         public override ClockData GetClockData() {
             ClockData _clock = base.GetClockData();
-            try {
-                _clock.Pck = (long) TimeSpan.Parse("0:00:" + PlayClock).TotalSeconds * 1000;
-            } catch (Exception) {}
+            if (_clock.Pck == 0) {
+                try {
+                    _clock.Pck = (long) TimeSpan.Parse("0:00:" + PlayClock).TotalSeconds * 1000;
+                } catch (Exception) {} 
+            }
             return _clock;
         }
+        /*
         public override DbScoreData GetScoreData() {
             DbScoreData _score = base.GetScoreData();
             int _out = 0;
@@ -109,12 +112,13 @@ namespace DakAccess
             _score.Fl = (Flag == "") ? false : true;
             return _score;
         }
-        public string PlayClock {get {return _data.Substring(200, 8).Trim();}}
-        public bool HomePossession { get {return (_data.Substring(209, 1) == "<") ? true : false;}}
-        public bool GuestPossession { get {return (_data.Substring(214, 1) == ">") ? true : false;}}
-        public string BallOn { get {return _data.Substring(219, 2).TrimStart();}}
-        public string Down { get {return _data.Substring(221, 3).TrimEnd();}}
-        public string Distance { get {return _data.Substring(224, 2).TrimStart();}}
-        public string Flag { get {return _data.Substring(310, 4).Trim();}}
+        */
+        // public string PlayClock {get {return _data.Substring(200, 8).Trim();}}
+        // public bool HomePossession { get {return (_data.Substring(209, 1) == "<") ? true : false;}}
+        // public bool GuestPossession { get {return (_data.Substring(214, 1) == ">") ? true : false;}}
+        // public string BallOn { get {return _data.Substring(219, 2).TrimStart();}}
+        // public string Down { get {return _data.Substring(221, 3).TrimEnd();}}
+        // public string Distance { get {return _data.Substring(224, 2).TrimStart();}}
+        // public string Flag { get {return _data.Substring(310, 4).Trim();}}
     }
 }

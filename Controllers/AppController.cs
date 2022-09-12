@@ -61,6 +61,23 @@ namespace WebAPI.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "No users found");
             }
+            // Make sure the database has been initialized with at least one admin user
+            if (_context.Users.Count() == 0)
+            {
+                // Create a default admin user with the username and password specified in the request
+                _context.Users.Add(new UserRecord { username = request.username, password = request.password, admin = true });
+                _context.SaveChanges();
+            }
+            // Make sure the database has been initialized with a seed value
+            if (_context.jwt_seed.Count() == 0)
+            {
+                // Create a default random seed value
+                Random rand = new Random();
+                var seed_ints = new byte[8];
+                rand.NextBytes(seed_ints);
+                _context.jwt_seed.Add(new jwt_seed { seed = BitConverter.ToUInt64(seed_ints, 0) });
+                _context.SaveChanges();
+            }
             var user = _context.Users.FirstOrDefault(u => u.username == request.username);
             if (user == null || user.password != request.password)
             {

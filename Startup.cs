@@ -37,7 +37,7 @@ namespace WebAPI
                 
                 opt.UseSqlite(Configuration.GetConnectionString("GameMgrContext"));
                 
-                });
+            });
             // The Scorebaord Console connection service needs to have a single instance so that the controllers can read
             // the same data written by the service.
             services.AddControllers();

@@ -10,6 +10,77 @@ using System.Drawing;
 
 namespace WebAPI.Controllers
 {
+    // Class to represent a Game from DB with date converted from long (DateTime.Ticks) to ISO date string
+    public class GameLocal
+    {
+        public GameLocal()
+        {
+        }
+        public GameLocal(Game _game) {
+            id = _game.id;
+            awayId = _game.awayId;
+            homeId = _game.homeId;
+            date = new DateTime(_game.date).ToString("yyyy-MM-dd");
+        }
+        public Game GetGame() {
+            Game _game = new Game();
+            _game.id = id;
+            _game.awayId = awayId;
+            _game.homeId = homeId;
+            _game.date = DateTime.Parse(date).Ticks;
+            return _game;
+        }
+        public long id { get; set; }
+        public long awayId { get; set; }
+        public long homeId { get; set; }
+        public string date { get; set; } = DateTime.UtcNow.ToString("s");
+    }
+    // Class to represet a GameView from DB with date converted from long (DateTime.Ticks) to ISO date string
+    public class GameViewLocal
+    {
+        public GameViewLocal()
+        {
+        }
+        public GameViewLocal(GameView _game) {
+            id = _game.id;
+            gameDate = new DateTime(_game.gameDate).ToString("yyyy-MM-dd");
+            HomeName = _game.HomeName;
+            HomeColor = _game.HomeColor;
+            HomeIcon = _game.HomeIcon;
+            HomeRecord = _game.HomeRecord;
+            GuestName = _game.GuestName;
+            GuestColor = _game.GuestColor;
+            GuestIcon = _game.GuestIcon;
+            GuestRecord = _game.GuestRecord;
+        }
+        public GameView GetGameView() {
+            GameView _game = new GameView();
+            _game.id = id;
+            _game.gameDate = DateTime.Parse(gameDate).Ticks;
+            _game.HomeName = HomeName;
+            _game.HomeColor = HomeColor;
+            _game.HomeIcon = HomeIcon;
+            _game.HomeRecord = HomeRecord;
+            _game.GuestName = GuestName;
+            _game.GuestColor = GuestColor;
+            _game.GuestIcon = GuestIcon;
+            _game.GuestRecord = GuestRecord;
+            return _game;
+        }
+        public long id { get; set; }
+        // public string gameDate { get; set; } = DateTime.UtcNow.AddYears(1).ToString("yyyy-MM-dd");
+        public string gameDate { get; set; } = DateTime.UtcNow.ToString("s");
+        public string HomeName { get; set; } = "Home";
+        public string HomeColor { get; set; } = "#ff0000";
+        public string HomeIcon { get; set; } = string.Empty;
+        public string HomeRecord {get; set; } = "0-0";
+        public string GuestName { get; set; } = "Guest";
+        public string GuestColor { get; set; } = "#0000ff";
+        public string GuestIcon { get; set; } = string.Empty;
+        public string GuestRecord {get; set; } = "0-0";
+    }
+
+
     [Route("rest/db")]
     [ApiController]
     public class GameDataController : ControllerBase
@@ -44,6 +115,7 @@ namespace WebAPI.Controllers
 #pragma warning restore 8600
         }
 
+        /*
         // GET: rest/db/gamesraw
         [HttpGet("gamesraw")]
         public async Task<ActionResult<IEnumerable<GameConfig>>> GetGameSetup()
@@ -70,6 +142,7 @@ namespace WebAPI.Controllers
 
             return gameConfig;
         }
+        */
 
         // GET: rest/db/schools
         [HttpGet("schools")]
@@ -181,7 +254,7 @@ namespace WebAPI.Controllers
 
             return NoContent();
         }
-
+        /*
         // GET: rest/db/TempSchool/5
         [HttpGet("TempSchool")]
         public async Task<ActionResult<TempSchool>> GetTempSchool()
@@ -199,40 +272,79 @@ namespace WebAPI.Controllers
                 schoolInfo.color = AddAlpha(schoolInfo.color);
             return schoolInfo;
         }
-
+        */
         // GET: rest/db/games
         [HttpGet("games")]
-        public async Task<ActionResult<IEnumerable<Game>>> GetGames()
+        public async Task<ActionResult<IEnumerable<GameLocal>>> GetGames()
         {
             if (_context.Games == null) {
                 return NotFound();
             }
-            return await _context.Games.ToListAsync();
+            var _games = await _context.Games.ToListAsync();
+            List<GameLocal> games = new List<GameLocal>();
+            foreach (var game in _games)
+            {
+                games.Add(new GameLocal(game));
+            }
+            return games;
         }
 
         // GET: rest/db/gamelist
         [HttpGet("gamelist")]
-        public async Task<ActionResult<IEnumerable<GameView>>> GetGameList()
+        public async Task<ActionResult<IEnumerable<GameViewLocal>>> GetGameList()
         {
-            if (_context.GameView == null) {
+            if (_context.Games == null || _context.Schools == null) {
                 return NotFound();
             }
-            return await _context.GameView.ToListAsync();
+            var results = (from a in _context.Schools join g in _context.Games on a.id equals g.awayId join h in _context.Schools on g.homeId equals h.id orderby g.date
+                            select new {g.id, gameDate=g.date, GuestName=a.mascot, GuestColor=a.color, GuestIcon=a.logo, GuestRecord=(a.win + "-" + a.loss),
+									HomeName=h.mascot, HomeColor=h.color, HomeIcon=h.logo, HomeRecord=(h.win + "-" + h.loss)});
+            List<GameViewLocal> games = new List<GameViewLocal>();
+            foreach (var game in results)
+            {
+                GameViewLocal gameView = new GameViewLocal();
+                gameView.id = (long) game.id;
+                gameView.gameDate = new DateTime(game.gameDate).ToString("yyyy-MM-dd");
+                gameView.GuestName = game.GuestName;
+                gameView.GuestColor = game.GuestColor;
+                gameView.GuestIcon = game.GuestIcon;
+                gameView.GuestRecord = game.GuestRecord;
+                gameView.HomeName = game.HomeName;
+                gameView.HomeColor = game.HomeColor;
+                gameView.HomeIcon = game.HomeIcon;
+                gameView.HomeRecord = game.HomeRecord;
+                games.Add(gameView);
+            }
+            return games;
         }
 
         // GET: rest/db/game/5
         [HttpGet("game/{id}")]
-        public async Task<ActionResult<GameView>> GetGameView(long id)
+        public async Task<ActionResult<GameViewLocal>> GetGameView(long id)
         {
-            if (_context.GameView == null) {
+            if (_context.Games == null || _context.Schools == null) {
                 return NotFound();
             }
-            var gameView = await _context.GameView.FindAsync(id);
-
-            if (gameView == null)
+            var result = (from a in _context.Schools join g in _context.Games on a.id equals g.awayId 
+                        join h in _context.Schools on g.homeId equals h.id orderby g.date
+                        select new {g.id, gameDate=g.date, GuestName=a.mascot, GuestColor=a.color, GuestIcon=a.logo, GuestRecord=(a.win + "-" + a.loss),
+                        HomeName=h.mascot, HomeColor=h.color, HomeIcon=h.logo, HomeRecord=(h.win + "-" + h.loss)}).Where(g => g.id == id).Take(1);
+            if (result == null)
             {
                 return NotFound();
             }
+            var _first = await result.FirstAsync();
+            GameViewLocal gameView = new GameViewLocal();
+            gameView.id = _first.id;
+            gameView.gameDate = new DateTime(_first.gameDate).ToString("yyyy-MM-dd");
+            gameView.GuestName = _first.GuestName;
+            gameView.GuestColor = _first.GuestColor;
+            gameView.GuestIcon = _first.GuestIcon;
+            gameView.GuestRecord = _first.GuestRecord;
+            gameView.HomeName = _first.HomeName;
+            gameView.HomeColor = _first.HomeColor;
+            gameView.HomeIcon = _first.HomeIcon;
+            gameView.HomeRecord = _first.HomeRecord;
             if (gameView.HomeColor.Length < 9)
                 gameView.HomeColor = AddAlpha(gameView.HomeColor);
             if (gameView.GuestColor.Length < 9)
@@ -242,24 +354,38 @@ namespace WebAPI.Controllers
 
         // GET: rest/db/game/5
         [HttpGet("game/next")]
-        public async Task<ActionResult<NextGame>> GetNextGame()
+        public async Task<ActionResult<GameViewLocal>> GetNextGame()
         {
-            if (_context.NextGame == null) {
+            if (_context.Games == null || _context.Schools == null) {
                 return NotFound();
             }
-            var game = await _context.NextGame.FirstOrDefaultAsync();
-
-            if (game == null)
+            var results = (from a in _context.Schools join g in _context.Games on a.id equals g.awayId 
+                        join h in _context.Schools on g.homeId equals h.id orderby g.date
+                        select new {g.id, gameDate=g.date, GuestName=a.mascot, GuestColor=a.color, GuestIcon=a.logo, GuestRecord=(a.win + "-" + a.loss),
+                        HomeName=h.mascot, HomeColor=h.color, HomeIcon=h.logo, HomeRecord=(h.win + "-" + h.loss)}).Where(_g => _g.gameDate >= DateTime.Now.AddHours(-3).Ticks).Take(1);
+            if (results == null)
             {
                 return NotFound();
             }
+            GameViewLocal game = new GameViewLocal();
+            var _first = await results.FirstAsync();
+            game.id = _first.id;
+            game.gameDate = new DateTime(_first.gameDate).ToString("yyyy-MM-dd");;
+            game.GuestName = _first.GuestName;
+            game.GuestColor = _first.GuestColor;
+            game.GuestIcon = _first.GuestIcon;
+            game.GuestRecord = _first.GuestRecord;
+            game.HomeName = _first.HomeName;
+            game.HomeColor = _first.HomeColor;
+            game.HomeIcon = _first.HomeIcon;
+            game.HomeRecord = _first.HomeRecord;
             if (game.HomeColor.Length < 9)
                 game.HomeColor = AddAlpha(game.HomeColor);
             if (game.GuestColor.Length < 9)
                 game.GuestColor = AddAlpha(game.GuestColor);
             return game;
         }
-
+        /*
         // GET: rest/db/game/5/1
         [HttpGet("game/{homeId}/{guestId}")]
         public async Task<ActionResult<TempGame>> GetTempGame(long homeId, long guestId)
@@ -279,17 +405,18 @@ namespace WebAPI.Controllers
                 tempGame.GuestColor = AddAlpha(tempGame.GuestColor);
             return tempGame;
         }
-
+        */
         // PUT: rest/db/game/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("game/{id}")]
-        public async Task<IActionResult> PutGame(long id, Game game)
+        public async Task<IActionResult> PutGame(long id, GameLocal game)
         {
             if (id != game.id || game.awayId == (long) 0 || game.homeId == (long) 0)
             {
                 return BadRequest();
             }
-            _context.Entry(game).State = EntityState.Modified;
+            Game _game = game.GetGame();
+            _context.Entry(_game).State = EntityState.Modified;
 
             try
             {
@@ -307,21 +434,22 @@ namespace WebAPI.Controllers
                 }
             }
 
-            return Ok(game);
+            return Ok(_game);
         }
 
         // POST: rest/db/game
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost("game")]
-        public async Task<ActionResult<Game>> PostGame(Game game)
+        public async Task<ActionResult<Game>> PostGame(GameLocal game)
         {
             if (_context.Games == null) {
                 return NotFound();
             }
-            _context.Games.Add(game);
+            Game _game = game.GetGame();
+            _context.Games.Add(_game);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetGameView), new { id = game.id }, game);
+            return CreatedAtAction(nameof(GetGameView), new { id = game.id }, _game);
         }
 
         // DELETE: rest/db/game/5

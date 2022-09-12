@@ -23,12 +23,13 @@ namespace WebAPI.Models
         [Display(Name = "Losses (this season)")]
         public int loss { get; set; } = 0;
 
+/*
         [NotMapped]
         public List<Game>? HomeGames { get; }
 
         [NotMapped]
         public List<Game>? AwayGames { get; }
-
+*/
     }
 
     public class Game
@@ -37,25 +38,16 @@ namespace WebAPI.Models
 
         public long awayId { get; set; }
 
-        [NotMapped]
-        [Display(Name = "Home Team")]
-        public School? home { get; set; }
-
         public long homeId { get; set; }
 
-        [NotMapped]
-        [Display(Name = "Visiting Team")]
-        public School? away { get; set; }
-
-
         [Display(Name = "Game Date")]
-        public string? date { get; set; }
+        public long date { get; set; } = DateTime.UtcNow.AddYears(1).Ticks;
 /*
         [Display(Name = "Sport")]
         public string sport { get; set; }
 */
     }
-
+/*
     public class GameConfig
     {
         public long Id { get; set; }
@@ -72,10 +64,12 @@ namespace WebAPI.Models
         public int GuestLoss {get; set; } = 0;
         // public bool LiveFeed { get; set; }
     }
+*/
     public class GameView
     {
         public long id { get; set; }
-        public string gameDate { get; set; } = DateTime.UtcNow.AddYears(1).ToString("yyyy-MM-dd");
+        // public string gameDate { get; set; } = DateTime.UtcNow.AddYears(1).ToString("yyyy-MM-dd");
+        public long gameDate { get; set; } = DateTime.UtcNow.AddYears(1).Ticks;
         public string HomeName { get; set; } = "Home";
         public string HomeColor { get; set; } = "#ff0000";
         public string HomeIcon { get; set; } = string.Empty;
@@ -85,6 +79,7 @@ namespace WebAPI.Models
         public string GuestIcon { get; set; } = string.Empty;
         public string GuestRecord {get; set; } = "0-0";
     }
+    /*
     public class NextGame
     {
         public long id { get; set; }
@@ -130,4 +125,5 @@ namespace WebAPI.Models
         [Display(Name = "Losses (this season)")]
         public int loss { get; set; } = 0;
     }
+    */
 }

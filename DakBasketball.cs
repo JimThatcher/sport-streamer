@@ -50,11 +50,14 @@ namespace DakAccess
         }
         public override ClockData GetClockData() {
             ClockData _clock = base.GetClockData();
-            try {
-                _clock.Pck = (long) TimeSpan.Parse("0:00:" + PlayClock).TotalSeconds * 1000;
-            } catch (Exception) {}
+            if (_clock.Pck == 0) {
+                try {
+                    _clock.Pck = (long) TimeSpan.Parse("0:00:" + PlayClock).TotalMilliseconds;
+                } catch (Exception) {} 
+            }
             return _clock;
         }
+        /*
         public override DbScoreData GetScoreData() {
             DbScoreData _score = base.GetScoreData();
             _score.Hpo = HomePossession;
@@ -68,6 +71,7 @@ namespace DakAccess
             _score.Gb = GuestBonus;
             return _score;
         }
+        */
         /*
         public override ConsoleInfo GetConsoleInfo() {
             ConsoleInfo _console = base.GetConsoleInfo();
@@ -75,12 +79,12 @@ namespace DakAccess
             return _console;
         }
         */
-        public string PlayClock {get {return _data.Substring(200, 8).Trim();}}
-        public bool HomePossession { get {return (_data.Substring(209, 1) == "<") ? true : false;}}
-        public bool GuestPossession { get {return (_data.Substring(215, 1) == ">") ? true : false;}}
-        public bool HomeBonus { get {return (_data.Substring(221, 1) == "<") ? true : false;}}
-        public bool GuestBonus { get {return (_data.Substring(228, 1) == ">") ? true : false;}}
-        public string HomeFouls { get {return _data.Substring(235, 2).TrimStart();}}
-        public string GuestFouls { get {return _data.Substring(237, 2).TrimStart();}}
+        // public string PlayClock {get {return _data.Substring(200, 8).Trim();}}
+        // public bool HomePossession { get {return (_data.Substring(209, 1) == "<") ? true : false;}}
+        // public bool GuestPossession { get {return (_data.Substring(215, 1) == ">") ? true : false;}}
+        // public bool HomeBonus { get {return (_data.Substring(221, 1) == "<") ? true : false;}}
+        // public bool GuestBonus { get {return (_data.Substring(228, 1) == ">") ? true : false;}}
+        // public string HomeFouls { get {return _data.Substring(235, 2).TrimStart();}}
+        // public string GuestFouls { get {return _data.Substring(237, 2).TrimStart();}}
     }
 }

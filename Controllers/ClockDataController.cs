@@ -47,12 +47,12 @@ namespace WebAPI.Controllers
             }
         }
 
-        public async void UpdateBrowserClients(ClockData clockData)
+        public Task UpdateBrowserClients(ClockData clockData)
         {
             ServerSentEvent sse = new ServerSentEvent();
             sse.Type = "clock";
             sse.Data = new List<string>(new string[] {clockData.asJson()} );
-            await _sseService.SendEventAsync(sse);
+            return _sseService.SendEventAsync(sse);
         }
 
         // GET: api/ClockData
@@ -111,7 +111,7 @@ namespace WebAPI.Controllers
                     _logger.LogError("Concurrency Error starting clock");
                 }
 
-                UpdateBrowserClients(clockData);
+                await UpdateBrowserClients(clockData);
                 _console.StartClockTimer();
                 return new ClockDataDak(clockData);
             }
@@ -153,7 +153,7 @@ namespace WebAPI.Controllers
                     }
                 }
 
-                UpdateBrowserClients(clockData);
+                await UpdateBrowserClients(clockData);
                 _console.StopClockTimer();
                 return new ClockDataDak(clockData);
             }
@@ -192,7 +192,7 @@ namespace WebAPI.Controllers
                 {
                 }
 
-                UpdateBrowserClients(clockData);
+                await UpdateBrowserClients(clockData);
                 return clockData;
             }
             return NotFound();
@@ -231,7 +231,7 @@ namespace WebAPI.Controllers
                 {
                 }
 
-                UpdateBrowserClients(clockData);
+                await UpdateBrowserClients(clockData);
                 return clockData;
             }
             return NotFound();
@@ -270,7 +270,7 @@ namespace WebAPI.Controllers
             clockData.lastChange = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            UpdateBrowserClients(clockData);
+            await UpdateBrowserClients(clockData);
             return CreatedAtAction(nameof(GetClockData), new { id = clockData.Id }, clockData);
             */
             return await ResetClockData(minutes, 0);
@@ -311,7 +311,7 @@ namespace WebAPI.Controllers
                         throw;
                     }
                 }
-                UpdateBrowserClients(clockData);
+                await UpdateBrowserClients(clockData);
                 return clockData;
             }
             return NotFound();
