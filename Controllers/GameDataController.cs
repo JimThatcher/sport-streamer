@@ -300,6 +300,22 @@ namespace WebAPI.Controllers
                             select new {g.id, gameDate=g.date, GuestName=a.mascot, GuestColor=a.color, GuestIcon=a.logo, GuestRecord=(a.win + "-" + a.loss),
 									HomeName=h.mascot, HomeColor=h.color, HomeIcon=h.logo, HomeRecord=(h.win + "-" + h.loss)});
             List<GameViewLocal> games = new List<GameViewLocal>();
+            // var _game = await results.FirstAsync();
+            await results.ForEachAsync((_this) => {
+                GameViewLocal gameView = new GameViewLocal();
+                gameView.id = (long) _this.id;
+                gameView.gameDate = new DateTime(_this.gameDate).ToString("yyyy-MM-dd");
+                gameView.GuestName = _this.GuestName;
+                gameView.GuestColor = _this.GuestColor;
+                gameView.GuestIcon = _this.GuestIcon;
+                gameView.GuestRecord = _this.GuestRecord;
+                gameView.HomeName = _this.HomeName;
+                gameView.HomeColor = _this.HomeColor;
+                gameView.HomeIcon = _this.HomeIcon;
+                gameView.HomeRecord = _this.HomeRecord;
+                games.Add(gameView);
+            });
+            /*
             foreach (var game in results)
             {
                 GameViewLocal gameView = new GameViewLocal();
@@ -315,6 +331,7 @@ namespace WebAPI.Controllers
                 gameView.HomeRecord = game.HomeRecord;
                 games.Add(gameView);
             }
+            */
             return games;
         }
 
