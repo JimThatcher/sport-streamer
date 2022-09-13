@@ -15,7 +15,7 @@ const App: FC = () => {
   const onClickDismiss = (key: string | number | undefined) => () => {
     notistackRef.current.closeSnackbar(key);
   };
-  console.log("URL: %s", window.location.href);
+  // console.log("URL: %s", window.location.href);
 
   return (
     <CustomTheme>
