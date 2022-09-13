@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-// import { ROUTE_BASE_URL } from './api/env';
+import { ROUTE_BASE_URL } from './api/env';
 
 import { BrowserRouter } from 'react-router-dom';
 
