@@ -1,4 +1,4 @@
-# sport-streamer
+# Live Sport Streaming Manager
 This is a very early release of a system for providing HTML/JavaScript-based graphic overlays for streaming live sporting events. The system is composed of five primarry components:
 1. A web server to access game-related data.
 2. A SQLite database, managed through the web server.
@@ -13,3 +13,6 @@ The web server is built on ASP.NET Core, using Entity Framework to access the da
 The front-end web app is built from the base web app in rjwats esp8266-react project (https://github.com/rjwats/esp8266-react).
 The graphic overlay pages ar basic HTML/JavaScript using server-sent-events to keep the display up-to-date with changes on the web server.
 The Stream Deck plugin is based on the Stream Deck Plugin Template project (https://github.com/elgatosf/streamdeck-plugintemplate) provided by Elgato.
+
+#How-to/Getting Started
+(coming soon)
