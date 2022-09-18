@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=1920 height=1080">
+    <!-- meta name="viewport" content="width=1920 height=1080" -->
     <style type="text/css">
         body { 
             background-color: rgba(0, 0, 0, 0); 
@@ -20,18 +20,46 @@
             transition-property: opacity;
         }
 
-        #scroll-container {
-            border: 3px solid rgba(0, 0, 0, 0);
-            overflow: hidden;
+        .scroll-container {
+            max-width: 1920px;
+            margin: 15px auto;
+            overflow: visible;
+            position: absolute; 
+            top: 1002px; 
+            left: 0px; 
+            height: 62px;
+            background: rgba(0, 0, 0, 0.5);
         }
 
-        #scroll-text {
-            /* animation properties */
-            -webkit-transform: translateX(100%);
+        .scroll {
+            display: flex;
+            display: box;
+            width: 100vw;
+            overflow: hidden;
+            margin: 5px auto;
+        }
+
+        .scroll-content {
+            overflow: visible;
+            animation: my-animation 50s linear infinite running;
             transform: translateX(100%);
-            
-            -webkit-animation: my-animation 15s linear infinite;
-            animation: my-animation 15s linear infinite;
+            left: 0px; 
+            width: 1920; 
+            height: 62px;
+            display: box;
+            display: flex;
+        }
+
+        .scroll-text {
+            /* animation properties */
+            white-space: nowrap;
+            font-size: 48px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            display: inline-flex;
+            display: inline-box;
+            transition: all 0.5s ease;
+            margin-bottom: 5px;
         }
 
         /* for Chrome */
@@ -41,41 +69,48 @@
         }
 
         @keyframes my-animation {
-            from {
+            0% {
                 -webkit-transform: translateX(100%);
-                transform: translateX(100%);
+                transform: translateX(0);
             }
-            to {
+            100% {
                 -webkit-transform: translateX(-100%);
-                transform: translateX(-100%);
+                transform: translateX(-50);
             }
         }
+        
 
       </style>
 </head>
 <title>Roster Scroller</title>
 <body>
     <div>
-        <div style="position: absolute; top: 0px; left: 0px; width: 1920px; height: 1080px;">
-            <canvas id="imgCanvas" width="1920" height="1080" style="border:1px solid #00000000;"></canvas>
-            <div id="scroll-container">
-                <div id="scroll-text">This is scrolling text.<div>
+        <div style="position: absolute; top: 0px; left: 0px; width: 1920; height: 1080px;">
+            <div class="scroll-container">
+                <div class="scroll">
+                    <div class="scroll-content">
+                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <div class="scroll-text" id="scroll-text1"></div>
+                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <!-- div class="scroll-text" id="scroll-text2">This is scrolling text.</div -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     <script>
         var rosterText = '';
 
-        function showRoster(imgPath) {
-            if (imgPath) {
-                if (String(imgPath) != String(sponsorImgFile)) {
-                    console.log("Sponsor image: " + imgPath + ", was " + sponsorImgFile);
-                    sponsorImgFile = imgPath;
-                    var ctx = c.getContext("2d");
-                    ctx.clearRect(0, 0, c.width, c.height);
-                    sponsorBackground.src = imagePath + bgFile;
-                }
-            }
+        function showRoster() {
+            document.body.classList.remove('hide');
+            document.body.classList.add('show');
         }
 
         function hideRoster() {
@@ -83,6 +118,44 @@
             document.body.classList.remove('show');
             document.body.classList.add('hide');
         };
+
+        function parseQuery(queryString) {
+            var query = {};
+            var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
+            for (var i = 0; i < pairs.length; i++) {
+                var pair = pairs[i].split('=');
+                query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+            }
+            return query;
+        };
+
+        function getRoster() {
+            // Read the roster from database
+            const queryStr = window.location.search;
+            queryParms = parseQuery(queryStr);
+            var teamToShow = (queryParms['team']) ? queryParms['team'] : 'Varsity';
+            console.log(teamToShow);
+            fetch('../rest/db/players/' + teamToShow)
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                // console.log(data);
+                for (var i = 0; i < data.length; i++) {
+                    rosterText += data[i].jersey + '-' + data[i].name + ' (' + data[i].position + '), ';
+                }
+                // Trim last comma from rosterText
+                rosterText = rosterText.slice(0, -2);
+                //rosterText = '                              ' + rosterText + '                       ';
+                document.getElementById('scroll-text1').innerHTML = rosterText;
+                // document.getElementById('scroll-text2').innerHTML = rosterText;
+            })
+            .catch(function (err) {
+                console.log('error: ' + err);
+            })
+        };
+
+        getRoster();
 
         if (!!window.EventSource) {
             var source = new EventSource('../events');
@@ -102,7 +175,7 @@
                 if (data.id == 0) {
                     hideRoster();
                 } else {
-                    showRoster(data["image"]);
+                    showRoster();
                 }
             }, false);
         }

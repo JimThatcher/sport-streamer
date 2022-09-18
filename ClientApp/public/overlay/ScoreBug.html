@@ -26,7 +26,7 @@
         <div style="position: absolute; top: 917px; left: 727px; width: 461px; height: 25px;">
             <canvas id="timeoutCanvas" width="461" height="25" style="border:1px solid #00000000;"></canvas>
         </div>
-        <div style="position: absolute; top: 917px; left: 1206px; width: 120px; height: 25px;">
+        <div style="position: absolute; top: 917px; left: 1189px; width: 120px; height: 25px;">
             <canvas id="flagCanvas" width="120" height="25" style="border:1px solid #00000000;"></canvas>
         </div>
         <div style="position: absolute; top: 940px; left: 475px; width: 1120px; height: 80px;">
@@ -35,6 +35,33 @@
     </div>
 
     <script>
+        // Variables for layout 30, 2, 819, 75
+        var bugHeight = 75;
+        var bgX = 30;
+        var bgY = 2;
+        var scoreWidth = 100;
+        var homeBgX = bgX;
+        var guestBgX = 391;
+        var colorBgWidth = 223;
+        var homeScoreX = 253;
+        var guestScoreX = 614;
+        var homeY = bgY;
+        var guestY = bgY;
+        var timeX = guestScoreX + scoreWidth;
+        var timeY = bgY;
+        var timeWidth = 120;
+        var dndWidth = 220;
+        var dndY = bgY;
+        var xtraHeight = 25;
+        var bgWidth = timeX + timeWidth;
+        var dndX = bgWidth;
+
+        var dndTextBase = 54;
+        var scoreTextBase = bugHeight - 10;
+        var timeTextBase = bugHeight - 5;
+        var quarterTextBase = bugHeight/2 -2;
+        var recordTextBase = 68;
+
         function ordinal(n) {
             var s = ["th", "st", "nd", "rd"];
             var v = n%100;
@@ -89,27 +116,28 @@
         function throwFlag(flag) {
             var c = document.getElementById("flagCanvas");
             var ctx = c.getContext("2d");
-            ctx.clearRect(0,0,120,25);
+            ctx.clearRect(0,0,timeWidth,xtraHeight);
             if (flag) {
                 ctx.fillStyle = "yellow";
-                ctx.fillRect(0, 0, 120, 25);
+                ctx.fillRect(0, 0, timeWidth, xtraHeight);
                 ctx.font = "italic 16pt Segoe UI Black";
                 ctx.fillStyle = "black";
-                ctx.fillText("FLAG", 60 - (ctx.measureText("FLAG").width/2), 21);
+                ctx.fillText("FLAG", (timeWidth/2) - (ctx.measureText("FLAG").width/2), xtraHeight - 3);
             }
         };
 
         function showTimeOut(home, guest) {
-            var x = (home) ? 0 : 361;
+            // NOTE: This assumes horizontal side-by-side display
+            var x = (home) ? 0 : (guestScoreX - homeScoreX);
             var c = document.getElementById("timeoutCanvas");
             var ctx = c.getContext("2d");
-            ctx.clearRect(0,0,461,25);
+            ctx.clearRect(0,0,((guestScoreX - homeScoreX)+scoreWidth),xtraHeight);
             ctx.fillStyle = "yellow";
             if (home || guest) {
-                ctx.fillRect(x, 0, 100, 25);
+                ctx.fillRect(x, 0, scoreWidth, xtraHeight);
                 ctx.font = "italic 15pt Segoe UI Semibold";
                 ctx.fillStyle = "black";
-                ctx.fillText("TIME OUT", x + 50 - (ctx.measureText("TIME OUT").width/2), 22);
+                ctx.fillText("TIME OUT", x + (scoreWidth/2) - (ctx.measureText("TIME OUT").width/2), xtraHeight - 3);
             }
         };
 
@@ -121,24 +149,24 @@
             ctx.lineWidth = 8;
             ctx.lineCap = "round";
             var start = 0;
-            var end = 145;
+            var end = homeBgX + 108;
             for (let i=1; i<=3; i++) {
                 ctx.strokeStyle = (home >= i) ? hasTO : noTO;
                 start = end + 15;
                 end = start + 10;
                 ctx.beginPath();
-                ctx.moveTo(start, 63);
-                ctx.lineTo(end, 63);
+                ctx.moveTo(start, bugHeight - 12);
+                ctx.lineTo(end, bugHeight - 12);
                 ctx.stroke();
             }
-            end = 506;
+            end = guestBgX + 108;
             for (let i=1; i<=3; i++) {
                 ctx.strokeStyle = (guest >= i) ? hasTO : noTO;
                 start = end + 15;
                 end = start + 10;
                 ctx.beginPath();
-                ctx.moveTo(start, 63);
-                ctx.lineTo(end, 63);
+                ctx.moveTo(start, bugHeight - 12);
+                ctx.lineTo(end, bugHeight - 12);
                 ctx.stroke();
             }
         }
@@ -151,48 +179,50 @@
             hasPoss = "yellow";
             ctx.lineWidth = 2;
             ctx.strokeStyle = (home) ? hasPoss : noPoss;
-            ctx.strokeRect(254, 3, 98, 73);
+            ctx.strokeRect(homeScoreX + 1, homeY + 1, scoreWidth - 2, bugHeight - 2);
             ctx.strokeStyle = (guest) ? hasPoss : noPoss;
-            ctx.strokeRect(615, 3, 98, 73);
+            ctx.strokeRect(guestScoreX + 1, homeY + 1, scoreWidth - 2, bugHeight - 2);
         }
 
         function scores(homeScore, guestScore) {
             console.log("Drawing scores ", homeScore, guestScore);
             var c = document.getElementById("scoreCanvas");
             var ctx = c.getContext("2d");
-            ctx.clearRect(253, 2, 100, 75);
-            ctx.clearRect(614, 2, 100, 75);
+            ctx.clearRect(homeScoreX, homeY, scoreWidth, bugHeight);
+            ctx.clearRect(guestScoreX, guestY, scoreWidth, bugHeight);
             ctx.fillStyle = "#525252cc";
-            ctx.fillRect(253, 2, 100, 75); // Home score background
-            ctx.fillRect(614, 2, 100, 75); // guest score background
+            ctx.fillRect(homeScoreX, homeY, scoreWidth, bugHeight); // Home score background
+            ctx.fillRect(guestScoreX, guestY, scoreWidth, bugHeight); // guest score background
             ctx.font = "52pt Segoe UI Black";
             ctx.fillStyle = "white";
-            ctx.fillText(homeScore, 303 - (ctx.measureText(homeScore).width/2), 65);
-            ctx.fillText(guestScore, 662 - (ctx.measureText(guestScore).width/2), 65);
+            ctx.fillText(homeScore, homeScoreX + scoreWidth/2 - (ctx.measureText(homeScore).width/2), scoreTextBase);
+            ctx.fillText(guestScore, guestScoreX + scoreWidth/2 - (ctx.measureText(guestScore).width/2), scoreTextBase);
         }
 
         function clock(clock) {
             var c = document.getElementById("scoreCanvas");
             var ctx = c.getContext("2d");
-            ctx.clearRect(731, 39, 120, 38);
+            var clockY = Math.round(bugHeight/2) + timeY - 1;
+            ctx.clearRect(timeX, clockY, timeWidth, clockY - 1);
             ctx.fillStyle = "#282828cc";
-            ctx.fillRect(731, 39, 120, 38); // Period/Time background
+            ctx.fillRect(timeX, clockY, timeWidth, clockY - 1); // Period/Time background
             ctx.font = "24pt Segoe UI Semibold";
-            if (clock != 0) {
+            if (!hideClock) {
                 ctx.fillStyle = "white";
-                ctx.fillText(clock, 791 - (ctx.measureText(clock).width/2), 70);
+                ctx.fillText(clock, timeX + timeWidth/2 - (ctx.measureText(clock).width/2), timeTextBase);
             }
         }
 
         function quarter(quarter) {
             var c = document.getElementById("scoreCanvas");
             var ctx = c.getContext("2d");
-            ctx.clearRect(731, 2, 120, 38);
+            var quarterHeight = Math.round(bugHeight/2) + timeY;
+            ctx.clearRect(timeX, timeY, timeWidth, quarterHeight);
             ctx.fillStyle = "#282828cc";
-            ctx.fillRect(731, 2, 120, 38); // Period/Time background
+            ctx.fillRect(timeX, timeY, timeWidth, quarterHeight); // Period/Time background
             ctx.font = "24pt Segoe UI Semibold";
             ctx.fillStyle = "yellow";
-            ctx.fillText(quarter, 791 - (ctx.measureText(quarter).width/2), 35);
+            ctx.fillText(quarter, timeX + timeWidth/2 - (ctx.measureText(quarter).width/2), quarterTextBase);
         }
 
         function downAndDistance(down, distance) {
@@ -200,26 +230,16 @@
             console.log("Drawing down and distance ", down, distance);
             var c = document.getElementById("scoreCanvas");
             var ctx = c.getContext("2d");
-            ctx.clearRect(858, 2, 220, 75);
-            // Down-Distance BG - Only fill if 'Down' != "   "
-            if (down > 0) {
-                if (!hasDnD) {
-                    hasDnD = true;
-                    ctx.fillStyle = "#30303080";
-                    ctx.fillRect(851, 2, 7, 75);
-                }
+            ctx.clearRect(dndX, dndY, dndWidth, bugHeight);
+            // Down-Distance BG - Only fill if 'Down' > 0
+            if (down > 0 && !hideDnD) {
                 ctx.fillStyle = "#2f2f2f99";
-                ctx.fillRect(858, 2, 220, 75);
+                ctx.fillRect(dndX, dndY, dndWidth, bugHeight);
                 ctx.font = "40px Segoe UI Semibold";
                 ctx.fillStyle = "yellow";
                 var distTxt = (distance > 0) ? ' & ' + distance : ' DOWN';
                 dndTxt = ordinal(down) + distTxt;
-                ctx.fillText(dndTxt, 968 - (ctx.measureText(dndTxt).width/2), 54);
-            }
-            if (down <= 0 && hasDnD)
-            {
-                hasDnD = false;
-                ctx.clearRect(851, 2, 7, 75);
+                ctx.fillText(dndTxt, dndX + (dndWidth/2) - (ctx.measureText(dndTxt).width/2), dndTextBase);
             }
         };
 
@@ -228,12 +248,12 @@
             var c = document.getElementById("scoreCanvas");
             var ctx = c.getContext("2d");
             ctx.fillStyle = "#30303080";
-            ctx.fillRect(30, 2, 821, 75); // Main background
+            ctx.fillRect(bgX, bgY, bgWidth, bugHeight); // Main background
             ctx.fillStyle = "#525252cc";
-            ctx.fillRect(253, 2, 100, 75); // Home score background
-            ctx.fillRect(614, 2, 100, 75); // guest score background
+            ctx.fillRect(homeScoreX, homeY, scoreWidth, bugHeight); // Home score background
+            ctx.fillRect(guestScoreX, guestY, scoreWidth, bugHeight); // guest score background
             ctx.fillStyle = "#282828cc";
-            ctx.fillRect(731, 2, 120, 75); // Period/Time background
+            ctx.fillRect(timeX, timeY, timeWidth, bugHeight); // Period/Time background
         };
 
         function parseQuery(queryString) {
@@ -261,6 +281,12 @@
             const queryStr = window.location.search;
             queryParms = parseQuery(queryStr);
             var gameToShow = (queryParms['game']) ? queryParms['game'] : 'next';
+            if (queryParms['clock'] && queryParms['clock'] == 'hide') {
+                hideClock = true;
+            }
+            if (queryParms['dnd'] && queryParms['dnd'] == 'hide') {
+                hideDnD = true;
+            }
             console.log(gameToShow);
             fetch('../rest/db/game/' + gameToShow)
             .then(function (response) {
@@ -273,19 +299,19 @@
                 homeName = data["homeName"].toUpperCase();
                 guestName = data["guestName"].toUpperCase();
                 var c = document.getElementById("scoreCanvas");
-                console.log("Score canvas: Width/height: Top/Left: ", c.clientWidth, c.clientHeight, c.clientTop, c.clientLeft);
                 var ctx = c.getContext("2d");
                 ctx.fillStyle = data["homeColor"];
-                ctx.fillRect(30, 2, 223, 75);
+                ctx.fillRect(homeBgX, bgY, colorBgWidth, bugHeight);
                 ctx.fillStyle = data["guestColor"];
-                ctx.fillRect(391, 2, 223, 75);
+                ctx.fillRect(guestBgX, bgY, colorBgWidth, bugHeight);
+                // TODO: Add param switch to turn off record
                 ctx.font = "16px Segoe UI Black";
                 ctx.fillStyle = "white";
-                if (data["homeRecord"] && data["homeRecord"] != "") {
-                    ctx.fillText(data["homeRecord"], 110, 68); 
+                if (data["homeRecord"] && data["homeRecord"].substring(0,1) != '-') {
+                    ctx.fillText(data["homeRecord"], homeBgX + 80, recordTextBase); 
                 }
-                if (data["guestRecord"] && data["guestRecord"] != "") {
-                    ctx.fillText(data["guestRecord"], 471, 68); 
+                if (data["guestRecord"] && data["guestRecord"].substring(0,1) != '-') {
+                    ctx.fillText(data["guestRecord"], guestBgX + 80, recordTextBase); 
                 }
             })
             .catch(function (err) {
@@ -299,8 +325,8 @@
             var ctx = c.getContext("2d");
             ctx.font = "36px Segoe UI Semibold";
             ctx.fillStyle = "white";
-            ctx.fillText(homeName, 247 - ctx.measureText(homeName).width, 50);
-            ctx.fillText(guestName, 608 - ctx.measureText(guestName).width, 50);
+            ctx.fillText(homeName, (homeBgX + colorBgWidth - 6) - ctx.measureText(homeName).width, 50);
+            ctx.fillText(guestName, (guestBgX + colorBgWidth - 6) - ctx.measureText(guestName).width, 50);
         }
 
         var queryParms = {};
@@ -312,6 +338,8 @@
         var homeTO = false;
         var guestTO = false;
         var flagState = false;
+        var hideClock = false;
+        var hideDnD = false;
         homeIcon.onload = function() {
             var c = document.getElementById("scoreCanvas");
             var ctx = c.getContext("2d");
@@ -319,7 +347,7 @@
             var y = 0;
             var xClip = (homeIcon.height < homeIcon.width) ? homeIcon.height : homeIcon.width;
             var yClip = homeIcon.height;
-            ctx.drawImage(homeIcon, x, y, xClip, yClip, 32 - (35 * (xClip/yClip)), 1, 78, 78);
+            ctx.drawImage(homeIcon, x, y, xClip, yClip, homeBgX + 2 - (35 * (xClip/yClip)), 1, 78, 78);
         }
         guestIcon.onload = function() {
             var c = document.getElementById("scoreCanvas");
@@ -328,7 +356,7 @@
             var y = 0;
             var xClip = (guestIcon.height < guestIcon.width) ? guestIcon.height : guestIcon.width;
             var yClip = guestIcon.height;
-            ctx.drawImage(guestIcon, x, y, xClip, yClip, 393 - (35 * (xClip/yClip)), 1, 78, 78);
+            ctx.drawImage(guestIcon, x, y, xClip, yClip, guestBgX + 2 - (35 * (xClip/yClip)), 1, 78, 78);
             writeNames();
         }
         setupScoreboard();
@@ -381,10 +409,31 @@
             source.addEventListener('scoreboard', function(e) {
                 console.log("Show scoreboard ", e.data);
                 var data = JSON.parse(e.data);
-                if (data.id == 1) {
-                    showScoreboard();
-                } else {
-                    hideScoreboard();
+                switch (data.id) {
+                    case 0:
+                        hideScoreboard();
+                        break;
+                    case 1:
+                        showScoreboard();
+                        break;
+                    case 2:
+                        hideClock = true;
+                        clock('-:--');
+                        break;
+                    case 3:
+                        hideClock = false;
+                        break;
+                    case 4:
+                        hideDnD = true;
+                        downAndDistance(0, 0);
+                        break;
+                    case 5:
+                        hideDnD = false;
+                        break;
+                    case 7:
+                        hideClock = false;
+                        hideDnD = false;
+                        break;
                 }
             }, false);
             source.addEventListener('hideScoreboard', function(e) {

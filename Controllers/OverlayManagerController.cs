@@ -142,6 +142,18 @@ namespace WebAPI.Controllers
           */
         }
 
+        // GET: rest/db/players/{team name}
+        // Returns a list of all Players currently in the Players table on the specified team.
+        [HttpGet("players/{team}")]
+        public async Task<ActionResult<IEnumerable<Player>>> GetPlayersOnTeam(string team)
+        {
+          if (_context.Players == null) {
+            return NotFound();
+          }
+          var players = await _context.Players.Where(p => p.school == team).OrderBy(p => p.jersey).ToListAsync();
+          return players;
+        }
+
         // GET: rest/db/player/5
         // Returns the Player with the specified id. We don't use jersey number here because
         // that may not be unique across all players on a large team.

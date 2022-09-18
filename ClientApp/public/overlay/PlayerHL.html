@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=1920 height=1080">
+    <link rel="stylesheet" href="../css/uifonts.css" type="text/css" charset="utf-8"/>
     <style type="text/css">
         body { 
             background-color: rgba(0, 0, 0, 0); 
@@ -38,13 +39,22 @@
       // The current code assumes that your player images have a 1:1 aspect ratio, which it resizes to 200x200px. 
       // If you want to use a different aspect ratio, you can modify the drawImage function below.
 
+        var jerseyFont = new FontFace('MyJersey', 'url(../fonts/varsityjersey-webfont.woff2)');
+        var sairaFont = new FontFace('MySaira', 'url(../fonts/SairaCondensed-Medium.ttf)');
         var bgFile = "PlayerBackground.png";
-        var imgXOffset = 120;
-        var imgYOffset = 650;
-        var textXOffset = imgXOffset + 120;
-        var textYOffset = imgYOffset + 248;
-        var textFont = "48px Segoe UI Semibold";
+        var imgXOffset = 90;
+        var imgYOffset = 550;
+        var imgHeight = 300;
+        var imgWidth = 300;
+        var textXOffset = imgXOffset + 150;
+        var textYOffset = imgYOffset + 360;
+        var numberXOffset = 80;
+        var numberYOffset = imgYOffset + 80;
+        var textFont = "70px MySaira";
+        var numberFont = "80px MyJersey";
         var textStyle = "white";
+        var posXOffset = imgXOffset;
+        var posYOffset = textYOffset + 40; // 40 is the height of the font for the position text
 
         var queryParms = {};
         var playerImage = new Image();
@@ -52,8 +62,24 @@
         var playerImgFile = '';
         var playerNum = '';
         var playerName = '';
+        var playerPos = '';
         var imagePath = './Images/';
         var isChanged = false;
+
+        jerseyFont.load().then(function(font) {
+            console.log('Jersey font ready');
+            document.fonts.add(font);
+        });
+
+        sairaFont.load().then(function(font) {
+            console.log('Saira font ready');
+            document.fonts.add(font);
+        });
+
+        function yrToGrade(n) {
+            var s = ["FR", "SO", "JR", "SR"];
+            return s[n-9];
+        }
 
         function parseQuery(queryString) {
             var query = {};
@@ -65,51 +91,7 @@
             return query;
         }
 
-        function loadData() {
-            fetch('/ws/hilight')
-            .then(function (response) {
-                if (response.status == 200) {
-                    // console.log ("Response OK");
-                    return response.json();
-                } else {
-                    // console.log ("Response: " + response.status);
-                    throw new Error('Network response was not ok.');
-                }
-            })
-            .then(function (data) {
-                if (data["jersey"] && data["name"] && data["image"]) {
-                    hilightPlayer(data["jersey"], data["name"], data["image"]);
-                }
-            })
-            .catch(function (err) {
-                clearImage();
-                // console.log('error: ' + err);
-            })
-        };
-
-        function setupImage() {
-            const queryStr = window.location.search;
-            var param = queryStr;
-            if (queryStr.length > 1) {
-                param = queryStr.substring(1);
-                queryParms = parseQuery(queryStr);
-                if (queryParms["Player"] && queryParms["Player"] != '')
-                {
-                    playerImgFile = queryParms["Player"] + ".png";
-                    playerNum = queryParms["Player"];
-                }
-                if (queryParms["Name"] && queryParms["Name"] != '')
-                {
-                  playerName = queryParms["Name"];
-                }
-                playerBackground.src = imagePath + bgFile;
-            }
-            else {
-                param = '1';
-            }
-        };
-
-        function hilightPlayer(jerseyNum, plrName, imgPath) {
+        function hilightPlayer(jerseyNum, plrName, imgPath, plrPos) {
             if (jerseyNum && plrName && imgPath) {
                 isChanged = false;
                 if (String(playerNum) != String(jerseyNum)) {
@@ -127,8 +109,9 @@
                     playerImgFile = imgPath;
                     isChanged = true;
                 }
+                playerPos = plrPos;
                 if (isChanged) {
-                    console.log("Player data changed: " + playerNum + " " + playerName + " " + playerImgFile);
+                    console.log("Player data changed: " + playerNum + " " + playerName + " " + playerImgFile + " " + playerPos);
                     var c = document.getElementById("imgCanvas");
                     var ctx = c.getContext("2d");
                     ctx.clearRect(0, 0, c.width, c.height);
@@ -163,11 +146,16 @@
           var y = imgYOffset;
           // var xClip = (playerImage.height < playerImage.width) ? playerImage.height : playerImage.width;
           // var yClip = playerImage.height;
-          ctx.drawImage(playerImage, x, y, 200, 200);
+          ctx.drawImage(playerImage, x, y, imgWidth, imgHeight);
           ctx.font = textFont;
           ctx.fillStyle = textStyle;
-          var txt = playerNum + " - " + playerName;
-          ctx.fillText(txt, textXOffset - (ctx.measureText(txt).width/2), textYOffset);
+          var txt = playerName.toUpperCase();
+          var startX = Math.max(10, textXOffset - (ctx.measureText(txt).width/2));
+          ctx.fillText(txt, startX, textYOffset);
+          ctx.font = '4' + textFont.substring(1);
+          ctx.fillText(playerPos, startX, posYOffset);
+          ctx.font = numberFont;
+          ctx.fillText(playerNum, numberXOffset - (ctx.measureText(playerNum).width/2), numberYOffset);
         }
 
         if (!!window.EventSource) {
@@ -188,11 +176,9 @@
                 if (data.id == 0) {
                     clearImage();
                 } else {
-                    hilightPlayer(data["jersey"], data["name"], data["image"]);
+                    hilightPlayer(data["jersey"], data["name"], data["image"], yrToGrade(data["year"]) + " - " + data["position"]);
                 }
             }, false);
-        } else {
-            setInterval( function () { loadData(); }, 500);
         }
     </script>
 </body>
