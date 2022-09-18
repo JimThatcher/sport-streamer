@@ -1,3 +1,25 @@
+/*
+Copyright (c) 2022 Jim Thatcher
+
+Permission is hereby granted, free of charge, to any person obtaining a copy 
+of this software and associated documentation files (the "Software"), to deal 
+in the Software without restriction, including without limitation the rights 
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+copies of the Software, and to permit persons to whom the Software is furnished
+to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all 
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+SOFTWARE.
+*/
+
 using Microsoft.EntityFrameworkCore;
 
 namespace WebAPI.Models
@@ -8,19 +30,10 @@ namespace WebAPI.Models
             : base(options)
         {
             this.Database.EnsureCreated();
-            /*
-            if (!this.Database.CanConnect()) {
-            } */
         }
-        // public DbSet<GameConfig>? GameSetup { get; set; }
-        // public DbSet<GameView>? GameView { get; set; }
-        // public DbSet<NextGame>? NextGame { get; set; }
-        // public DbSet<TempGame>? TempGame { get; set; }
         public DbSet<School>? Schools { get; set; }
-        // public DbSet<TempSchool>? TempSchool { get; set; }
         public DbSet<Game>? Games { get; set; }
         public DbSet<Player>? Players { get; set; }
-        // public DbSet<PlayerSorted>? Teams { get; set; }
         public DbSet<Sponsor>? Sponsors { get; set; }
         public DbSet<jwt_seed>? jwt_seed { get; set; }
         public DbSet<UserRecord>? Users { get; set; }
@@ -32,11 +45,6 @@ namespace WebAPI.Models
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            /*
-            modelBuilder.Entity<GameConfig>().ToTable(nameof(GameConfig));
-            modelBuilder.Entity<Game>().HasOne<School>(h => h.home).WithMany(s => s.HomeGames).HasForeignKey(h => h.homeId);
-            modelBuilder.Entity<Game>().HasOne<School>(a => a.away).WithMany(s => s.AwayGames).HasForeignKey(a => a.awayId);
-            */
         }
     }
     public class GameContext : DbContext

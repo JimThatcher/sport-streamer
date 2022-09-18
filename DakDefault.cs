@@ -1,27 +1,53 @@
+/*
+Copyright (c) 2022 Jim Thatcher
+
+Permission is hereby granted, free of charge, to any person obtaining a copy 
+of this software and associated documentation files (the "Software"), to deal 
+in the Software without restriction, including without limitation the rights 
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+copies of the Software, and to permit persons to whom the Software is furnished
+to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all 
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+SOFTWARE.
+*/
 using System;
 using System.Text.Json;
 using WebAPI.Models;
 
 namespace DakAccess
 {
-    /*
-    public class BasicData {
-        private DakDefault _fb;
-        public BasicData(DakDefault fb) { _fb = fb; }
-        public string Hs { get {return _fb.HomeScore;}}
-        public string Gs { get {return _fb.GuestScore;}}
-        public string Htol { get {return _fb.HomeTOL;}}
-        public string Gtol { get {return _fb.GuestTOL;}}
-        public string Htx { get {return _fb.HomeTimeOut;}}
-        public string Gtx { get {return _fb.GuestTimeOut;}}
-        public bool Hto { get {return _fb.HomeTimeOutTrue;}}
-        public bool Gto { get {return _fb.GuestTimeOutTrue;}}
-        public string Pd { get {return _fb.PeriodNum;}}
-        public string PdO { get {return _fb.PeriodOrd;}}
-        public string PdTx { get {return _fb.PeriodText;}}
-    }
-    */
-    
+    // This base class parses the RTD stream from a Daktronics scoreboard controller.
+    // It recognizes and parses all common fields, and provides a default implementation
+    // that recognizes most fields for Football, Basktball, Soccer, and Hockey.
+    // Sport-specific fields for other sports can be implemented in a new class that
+    // inherits from this one.
+    // This class parses data based on the following zero-based data in the RTD stream:
+    // -- 200-208: PlayClock - public string PlayClock {get {return _data.Substring(200, 8).Trim();}}
+    // -- 200-200: HomePossession (Soccer) - public bool HomePossession { get {return (_data.Substring(200, 1) == "<") ? true : false;}}
+    // -- 205-205: GuestPossession (Soccer) - public bool HomePossession { get {return (_data.Substring(200, 1) == ">") ? true : false;}}
+    // -- 209-209: HomePossession (Foot/Basket) - public bool HomePossession { get {return (_data.Substring(209, 1) == "<") ? true : false;}}
+    // -- 214-214: GuestPossession - (Football) public bool GuestPossession { get {return (_data.Substring(214, 1) == ">") ? true : false;}}
+    // -- 215-215: GuestPossession (Basketball) - public bool GuestPossession { get {return (_data.Substring(215, 1) == ">") ? true : false;}}
+    // -- 219-220: BallOn (Football) - public string BallOn { get {return _data.Substring(219, 2).TrimStart();}}
+    // -- 221-223: Down (Football) - public string Down { get {return _data.Substring(221, 3).TrimEnd();}}
+    // -- 221-221: HomeBonus (Basketball) - public bool HomeBonus { get {return (_data.Substring(221, 1) == "<") ? true : false;}}
+    // -- 224-225: Distance (Football) - public string Distance { get {return _data.Substring(224, 2).TrimStart();}}
+    // -- 228-228: GuestBonus (Basketball) - public bool GuestBonus { get {return (_data.Substring(228, 1) == ">") ? true : false;}}
+    // -- 235-236: HomeFouls (Basketball) - public string HomeFouls { get {return _data.Substring(235, 2).TrimStart();}}
+    // -- 237-238: GuestFouls (Basketball) - public string GuestFouls { get {return _data.Substring(237, 2).TrimStart();}}
+    // -- 310-313: Flag (Football) - public string Flag { get {return _data.Substring(310, 4).Trim();}}
+    // -- 345-345: HomePenaltyTrue (Hockey) - public bool HomePenaltyTrue { get {return (_data.Substring(345, 1) == "<") ? true : false;}}
+    // -- 353-353: GuestPenaltyTrue (Hockey) - public bool GuestPenaltyTrue { get {return (_data.Substring(353, 1) == ">") ? true : false;}}
+
     public class DakDefault : ISportData
     {
         protected string _data;
@@ -48,7 +74,6 @@ namespace DakAccess
 
         public virtual void UpdateData(int dataLen, int offset, ref string data) {
             _data = data;
-            // _code = data.Substring(183, 4);
             // If the change starts at zero and extends beyond Home Score field, it's a full update
             if (offset == 0 && dataLen >= 107) {
                 _clkUpdated = true;
@@ -262,30 +287,6 @@ namespace DakAccess
                 return false;
         }}
 
-        /*
-        // Basketball details:
-        // Football details:
-        -- public string Flag { get {return _data.Substring(310, 4).Trim();}}
-        // Hockey details:
-        // Soccer details:
-        // Combined (zero-based):
-        // -- 200-208: PlayClock - public string PlayClock {get {return _data.Substring(200, 8).Trim();}}
-        // -- 200-200: HomePossession (Soccer) - public bool HomePossession { get {return (_data.Substring(200, 1) == "<") ? true : false;}}
-        // -- 205-205: GuestPossession (Soccer) - public bool HomePossession { get {return (_data.Substring(200, 1) == ">") ? true : false;}}
-        // -- 209-209: HomePossession (Foot/Basket) - public bool HomePossession { get {return (_data.Substring(209, 1) == "<") ? true : false;}}
-        // -- 214-214: GuestPossession - (Football) public bool GuestPossession { get {return (_data.Substring(214, 1) == ">") ? true : false;}}
-        // -- 215-215: GuestPossession (Basketball) - public bool GuestPossession { get {return (_data.Substring(215, 1) == ">") ? true : false;}}
-        // -- 219-220: BallOn (Football) - public string BallOn { get {return _data.Substring(219, 2).TrimStart();}}
-        // -- 221-223: Down (Football) - public string Down { get {return _data.Substring(221, 3).TrimEnd();}}
-        // -- 221-221: HomeBonus (Basketball) - public bool HomeBonus { get {return (_data.Substring(221, 1) == "<") ? true : false;}}
-        // -- 224-225: Distance (Football) - public string Distance { get {return _data.Substring(224, 2).TrimStart();}}
-        // -- 228-228: GuestBonus (Basketball) - public bool GuestBonus { get {return (_data.Substring(228, 1) == ">") ? true : false;}}
-        // -- 235-236: HomeFouls (Basketball) - public string HomeFouls { get {return _data.Substring(235, 2).TrimStart();}}
-        // -- 237-238: GuestFouls (Basketball) - public string GuestFouls { get {return _data.Substring(237, 2).TrimStart();}}
-        // -- 310-313: Flag (Football) - public string Flag { get {return _data.Substring(310, 4).Trim();}}
-        // -- 345-345: HomePenaltyTrue (Hockey) - public bool HomePenaltyTrue { get {return (_data.Substring(345, 1) == "<") ? true : false;}}
-        // -- 353-353: GuestPenaltyTrue (Hockey) - public bool GuestPenaltyTrue { get {return (_data.Substring(353, 1) == ">") ? true : false;}}
-        */
         public string ConsoleModel { get {return _data.Substring(187, 4);}}
         public string ConsoleFirmware { get {return _data.Substring(191, 3);}}
 

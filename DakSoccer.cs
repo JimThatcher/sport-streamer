@@ -1,29 +1,30 @@
+/*
+Copyright (c) 2022 Jim Thatcher
+
+Permission is hereby granted, free of charge, to any person obtaining a copy 
+of this software and associated documentation files (the "Software"), to deal 
+in the Software without restriction, including without limitation the rights 
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+copies of the Software, and to permit persons to whom the Software is furnished
+to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all 
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+SOFTWARE.
+*/
 using System;
 using System.Text.Json;
 using WebAPI.Models;
 
 namespace DakAccess
 {
-    /*
-    public class SoccerData {
-        private DakSoccer _fb;
-        public SoccerData(DakSoccer fb) { _fb = fb; }
-        public string Hs { get {return _fb.HomeScore;}}
-        public string Gs { get {return _fb.GuestScore;}}
-        public string Htol { get {return _fb.HomeTOL;}}
-        public string Gtol { get {return _fb.GuestTOL;}}
-        public string Htx { get {return _fb.HomeTimeOut;}}
-        public string Gtx { get {return _fb.GuestTimeOut;}}
-        public bool Hto { get {return _fb.HomeTimeOutTrue;}}
-        public bool Gto { get {return _fb.GuestTimeOutTrue;}}
-        public string Pd { get {return _fb.PeriodNum;}}
-        public string PdO { get {return _fb.PeriodOrd;}}
-        public string PdTx { get {return _fb.PeriodText;}}
-        public bool Hpo { get {return _fb.HomePossession;}}
-        public bool Gpo { get {return _fb.GuestPossession;}}
-    }
-    */
-    
     public class DakSoccer : DakDefault
     {
         public override string GetDefaultData() {
@@ -34,15 +35,5 @@ namespace DakAccess
             _sport = "Soccer";
             _data = GetDefaultData();
         }
-        /*
-        public override DbScoreData GetScoreData() {
-            DbScoreData _score = base.GetScoreData();
-            _score.Hpo = HomePossession;
-            _score.Gpo = GuestPossession;
-            return _score;
-        }
-        */
-        // public bool HomePossession { get {return (_data.Substring(200, 1) == "<") ? true : false;}}
-        // public bool GuestPossession { get {return (_data.Substring(205, 1) == ">") ? true : false;}}
     }
 }

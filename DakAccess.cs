@@ -1,3 +1,25 @@
+/*
+Copyright (c) 2022 Jim Thatcher
+
+Permission is hereby granted, free of charge, to any person obtaining a copy 
+of this software and associated documentation files (the "Software"), to deal 
+in the Software without restriction, including without limitation the rights 
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+copies of the Software, and to permit persons to whom the Software is furnished
+to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all 
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+SOFTWARE.
+*/
+
 using System;
 using System.Text;
 using System.IO.Ports;
@@ -57,6 +79,15 @@ namespace DakAccess
         Unknown = 5
     }
     public class ConsoleData : IHostedService {
+        // This class is the parser for the Daktronics serial data stream. It is implemented
+        // as a hosted service so that it can run independently of the web server.
+        // It implements rest endpoints for the web server to use to get the data, and to 
+        // start and stop the parser from attempting to connect to the serial port. By default
+        // it will attempt to connect to the serial port every 10 seconds when the server is
+        // started. APIs in the ScoreData controller will start and stop the timer used to 
+        // attempt to connect to the serial port.
+        // This class also implements a timer that can be used when a connection to the scoreboard
+        // controller is not available. The timer is accessed through the ClockData controller.
         private readonly ILogger<ConsoleData> _logger;
         // This timer is initially used to find a serial port and attempt to connect through it to the console.
         // TODO: Once a console is connected, convert this to a watchdog timer that will tell us if no data is
@@ -70,7 +101,7 @@ namespace DakAccess
         private readonly IServerSentEventsService _sseService;
         // private string _clockJson;
         // private string _scoreJson;
-        // Time for managing manual clock updates when no console is connected.
+        // Timer for managing manual clock updates when no console is connected.
         private Timer? _clockTimer = null;
 
         public ConsoleData(ILogger<ConsoleData> logger, IServiceScopeFactory scopeFactory, IServerSentEventsService serverSentEventsService) {

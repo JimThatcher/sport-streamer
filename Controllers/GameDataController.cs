@@ -1,3 +1,24 @@
+/*
+Copyright (c) 2022 Jim Thatcher
+
+Permission is hereby granted, free of charge, to any person obtaining a copy 
+of this software and associated documentation files (the "Software"), to deal 
+in the Software without restriction, including without limitation the rights 
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+copies of the Software, and to permit persons to whom the Software is furnished
+to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all 
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+SOFTWARE.
+*/
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -115,35 +136,6 @@ namespace WebAPI.Controllers
 #pragma warning restore 8600
         }
 
-        /*
-        // GET: rest/db/gamesraw
-        [HttpGet("gamesraw")]
-        public async Task<ActionResult<IEnumerable<GameConfig>>> GetGameSetup()
-        {
-            if (_context.GameSetup == null) {
-                return NotFound();
-            }
-            return await _context.GameSetup.ToListAsync();
-        }
-
-        // GET: rest/db/gameraw/5
-        [HttpGet("gameraw/{id}")]
-        public async Task<ActionResult<GameConfig>> GetGameConfig(long id)
-        {
-            if (_context.GameSetup == null) {
-                return NotFound();
-            }
-            var gameConfig = await _context.GameSetup.FindAsync(id);
-
-            if (gameConfig == null)
-            {
-                return NotFound();
-            }
-
-            return gameConfig;
-        }
-        */
-
         // GET: rest/db/schools
         [HttpGet("schools")]
         public async Task<ActionResult<IEnumerable<School>>> GetSchools()
@@ -254,25 +246,7 @@ namespace WebAPI.Controllers
 
             return NoContent();
         }
-        /*
-        // GET: rest/db/TempSchool/5
-        [HttpGet("TempSchool")]
-        public async Task<ActionResult<TempSchool>> GetTempSchool()
-        {
-            if (_context.TempSchool == null) {
-                return NotFound();
-            }
-            var schoolInfo = await _context.TempSchool.FindAsync((long) 1);
 
-            if (schoolInfo == null)
-            {
-                return NotFound();
-            }
-            if (schoolInfo.color.Length < 9)
-                schoolInfo.color = AddAlpha(schoolInfo.color);
-            return schoolInfo;
-        }
-        */
         // GET: rest/db/games
         [HttpGet("games")]
         public async Task<ActionResult<IEnumerable<GameLocal>>> GetGames()
@@ -384,27 +358,7 @@ namespace WebAPI.Controllers
                 game.GuestColor = AddAlpha(game.GuestColor);
             return game;
         }
-        /*
-        // GET: rest/db/game/5/1
-        [HttpGet("game/{homeId}/{guestId}")]
-        public async Task<ActionResult<TempGame>> GetTempGame(long homeId, long guestId)
-        {
-            if (_context.TempGame == null) {
-                return NotFound();
-            }
-            var tempGame = await _context.TempGame.Where(h => h.homeId == homeId).Where(a => a.awayId == guestId).FirstOrDefaultAsync();
 
-            if (tempGame == null)
-            {
-                return NotFound();
-            }
-            if (tempGame.HomeColor.Length < 9)
-                tempGame.HomeColor = AddAlpha(tempGame.HomeColor);
-            if (tempGame.GuestColor.Length < 9)
-                tempGame.GuestColor = AddAlpha(tempGame.GuestColor);
-            return tempGame;
-        }
-        */
         // PUT: rest/db/game/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("game/{id}")]
