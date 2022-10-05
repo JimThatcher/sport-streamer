@@ -1,0 +1,295 @@
+<!--
+Copyright (c) 2022 Jim Thatcher
+
+Permission is hereby granted, free of charge, to any person obtaining a copy 
+of this software and associated documentation files (the "Software"), to deal 
+in the Software without restriction, including without limitation the rights 
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+copies of the Software, and to permit persons to whom the Software is furnished
+to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all 
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+SOFTWARE.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=1920 height=1080">
+    <link rel="stylesheet" href="../css/uifonts.css" type="text/css" charset="utf-8"/>
+    <style type="text/css">
+        body { 
+            background-color: rgba(0, 0, 0, 0); 
+            margin: 0px auto; 
+            overflow: hidden;
+        }
+        body.hide {
+            opacity: 0;
+            transition-duration: 0.9s;
+            transition-property: opacity;
+        }
+        body.show {
+            opacity: 1;
+            transition-duration: 0.8s;
+            transition-property: opacity;
+        }
+        .lineup {
+            position: absolute;
+            top: 700px;
+            left: 0px;
+            width: 1920px;
+            height: 240px;
+            background-color: rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+        .title {
+            position: absolute;
+            top: 0px;
+            left: 280px;
+            width: 1640px;
+            height: 40px;
+            font-family: "MySaira";
+            font-size: 40px;
+            color: white;
+            text-align: left;
+            line-height: 40px;
+        }
+        .lineup-list {
+            position: absolute;
+            top: 40px;
+            left: 0px;
+            width: 1920px;
+            height: 200px;
+            line-height: 40px;
+            display: flex;
+            flex: 1, 2, auto;
+        }
+        .lineup-item {
+            display: inline-flex;
+            display: inline-box;
+            font-family: "MySaira";
+            font-size: 40px;
+            color: white;
+            text-align: left;
+            line-height: 40px;
+            top: 40px;
+            left: 2px;
+            width: 16%;
+            height: 200px;
+        }
+      </style>
+</head>
+<title>Lineup</title>
+<body class="hide">
+    <div>
+        <div style="position: absolute; top: 0px; left: 0px; width: 1920px; height: 1080px;">
+            <div id="lineup" class="lineup hide">
+                <canvas id="lineup-canvas" width="1920" height="240" style="position: absolute; top: 0px; left: 0px; width: 1920px; height: 240px;"></canvas>
+                <!--
+                <div id="title" class="title">Lineup</div>
+                <div id="lineup-list" class="lineup-list">
+                    <canvas id="icon" width="200" height="200" style="position: absolute; top: 0px; left: 0px; width: 200px; height: 200px;"></canvas>
+                    <div class="lineup-item"></div>
+                </div> -->
+            </div>
+            <canvas id="imgCanvas" width="1920" height="1080" style="border:1px solid #00000000;"></canvas>
+        </div>
+    </div>
+
+    <script>
+      // Modify these variables to customize your player highlight overlay. Your bgFile should be a png file with a transparent background
+      // and a semi-transparent dark shading across the area that the player image will be placed. The player image should be a png with a
+      // transparent background. The player image will be placed at the imgXOffset and imgYOffset coordinates. The player's name and jersey 
+      // number will be centered on the textXOffset at the textYOffset.
+      // If you want to use a different font, you can change the ctx.font and ctx.fillStyle variables below.
+      // The current code assumes that your player images have a 1:1 aspect ratio, which it resizes to 200x200px. 
+      // If you want to use a different aspect ratio, you can modify the drawImage function below.
+
+        var jerseyFont = new FontFace('MyJersey', 'url(../fonts/varsityjersey-webfont.woff2)');
+        var sairaFont = new FontFace('MySaira', 'url(../fonts/SairaCondensed-Medium.ttf)');
+        // var bgFile = "PlayerBackground.png";
+        // var imgXOffset = 90;
+        // var imgYOffset = 550;
+        // var imgHeight = 300;
+        // var imgWidth = 300;
+        var textXOffset = 10;
+        var firstYOffset = 50;
+        var lastYOffset = 110;
+        var numberXOffset = 10;
+        var numberYOffset = 230;
+        var textFont = "75px MySaira";
+        var numberFont = "60px MyJersey";
+        var textStyle = "white";
+        var posXOffset = 150;
+        var posYOffset = numberYOffset; // 40 is the height of the font for the position text
+        var bgColor = "rgba(0, 0, 0, 0.5)";
+        var logo = "";
+
+        var queryParms = {};
+        var iconImage = new Image();
+        // var playerBackground = new Image();
+        // var playerImgFile = '';
+        var playerNum = '';
+        var lineupName = '';
+        var playerPos = '';
+        var logoPath = '../Images/';
+        var isChanged = false;
+
+        jerseyFont.load().then(function(font) {
+            // console.log('Jersey font ready');
+            document.fonts.add(font);
+        });
+
+        sairaFont.load().then(function(font) {
+            // console.log('Saira font ready');
+            document.fonts.add(font);
+        });
+
+        function yrToGrade(n) {
+            var s = ["FR", "SO", "JR", "SR"];
+            return s[n-9];
+        }
+
+        function parseQuery(queryString) {
+            var query = {};
+            var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
+            for (var i = 0; i < pairs.length; i++) {
+                var pair = pairs[i].split('=');
+                query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+            }
+            return query;
+        }
+
+        function hilightPlayer(jerseyNum, plrName, imgPath, plrPos, idx) {
+            console.log("Player data changed: " + jerseyNum + " " + plrName + " " + plrPos);
+            var c = document.getElementById("lineup-canvas");
+            var ctx = c.getContext("2d");
+            ctx.font = textFont;
+            ctx.fillStyle = textStyle;
+            var txt = plrName.toUpperCase();
+            var firstName = txt.split(" ")[0];
+            var lastName = txt.split(" ")[1];
+            var startX = 240 + (idx * 168);
+            ctx.fillText(plrPos, posXOffset + startX, posYOffset);
+            var textLen = ctx.measureText(lastName).width;
+            while (textLen > 320) {
+                ctx.font = (parseInt(ctx.font) - 1) + "px MySaira";
+                textLen = ctx.measureText(lastName).width;
+            }
+            ctx.fillText(lastName, textXOffset + startX, lastYOffset);
+            ctx.font = '4' + textFont.substring(1);
+            ctx.fillText(firstName, textXOffset + startX, firstYOffset);
+            ctx.font = numberFont;
+            ctx.fillText(jerseyNum, numberXOffset + startX, numberYOffset);
+        }
+
+        function clearScreen() {
+            lineupName = '';
+            document.body.classList.remove('show');
+            document.body.classList.add('hide');
+        };
+/*
+        playerImage.onload = function() {
+          var c = document.getElementById("imgCanvas");
+          var ctx = c.getContext("2d");
+          var x = imgXOffset;
+          var y = imgYOffset;
+          // var xClip = (playerImage.height < playerImage.width) ? playerImage.height : playerImage.width;
+          // var yClip = playerImage.height;
+          ctx.drawImage(playerImage, x, y, imgWidth, imgHeight);
+          ctx.font = textFont;
+          ctx.fillStyle = textStyle;
+          var txt = lineupName.toUpperCase();
+          var startX = Math.max(10, textXOffset - (ctx.measureText(txt).width/2));
+          ctx.fillText(txt, startX, textYOffset);
+          ctx.font = '4' + textFont.substring(1);
+          ctx.fillText(playerPos, startX, posYOffset);
+          ctx.font = numberFont;
+          ctx.fillText(playerNum, numberXOffset - (ctx.measureText(playerNum).width/2), numberYOffset);
+        }
+*/
+        iconImage.onload = function() {
+            var c = document.getElementById("lineup-canvas");
+            var ctx = c.getContext("2d");
+            var x = 0;
+            var y = 0;
+            var xClip = (iconImage.height < iconImage.width) ? iconImage.height : iconImage.width;
+            var yClip = iconImage.height;
+            ctx.drawImage(iconImage, x, y, 240, 240);
+        }
+
+        function setupLineup() {
+            const queryStr = window.location.search;
+            queryParms = parseQuery(queryStr);
+            var school = (queryParms['school']) ? queryParms['school'] : 1;
+            console.log(school);
+            fetch('../rest/db/school/' + school)
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                console.log(data.color + " " + data.logo);
+                bgColor = data.color + "C0";
+                logo = '../Images/' + data.logo;
+            })
+            .catch(function (err) {
+                console.log('error: ' + err);
+            })
+        }
+
+        setupLineup();
+
+        if (!!window.EventSource) {
+            var source = new EventSource('../events');
+            source.addEventListener('open', function(e) {
+                console.log("Events Connected");
+            }, false);
+
+            source.addEventListener('error', function(e) {
+                if (e.target.readyState != EventSource.OPEN) {
+                    console.log("Events Disconnected");
+                }
+            }, false);
+
+            source.addEventListener('lineup', function(e) {
+                console.log("player lineup ", e.data);
+                var data = JSON.parse(e.data);
+                if (data.positions == null || data.positions.length == 0) {
+                    clearScreen();
+                } else {
+                    // TODO: Clear the canvas
+                    console.log(data.name + data.positions.length);
+                    var lu = document.getElementById("lineup");
+                    lu.style.backgroundColor = bgColor;
+                    // var te = document.getElementById("title");
+                    // te.innerHTML = data.name;
+                    // var list = document.getElementById("lineup-list");
+                    iconImage.src = logo;
+                    var idx = 5 - data.positions.length;
+                    // TODO: Read each player from database and display their info
+                    data.positions.forEach (function (item) {
+                        console.log(item);
+                        console.log("Position: " + item.name + ", id: " + item.id);
+                        // hilightPlayer(jerseyNum, plrName, imgPath, plrPos, idx);
+                        hilightPlayer(35, 'Jack Forest', '35-Forest.png', item.name, idx)
+                        idx = idx + 2;
+                    });
+
+
+                    document.body.classList.remove('hide');
+                    document.body.classList.add('show');
+                    // hilightPlayer(data["jersey"], data["name"], data["image"], yrToGrade(data["year"]) + " - " + data["position"]);
+                }
+            }, false);
+        }
+    </script>
+</body>
+</html>

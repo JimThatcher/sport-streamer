@@ -85,6 +85,16 @@ namespace WebAPI.Controllers
       public string school {get; set;} = string.Empty;
     }
 
+    public class Position {
+      public long id { get; set; }
+      public string name { get; set; } = string.Empty;
+    }
+    public class Lineup {
+      // public long id { get; set; }
+      public string name { get; set; } = string.Empty;
+      public List<Position> positions { get; set; } = new List<Position>();
+    }
+
     [Route("rest/db")]
     [ApiController]
     public class OverlayManagerController : ControllerBase
@@ -300,6 +310,18 @@ namespace WebAPI.Controllers
               return Ok(player);
             } else
               return NotFound();
+        }
+
+        // PUT: res/db/lineup
+        [HttpPut("lineup")]
+        public async Task<ActionResult> PutLineup(Lineup lineup)
+        {
+          ServerSentEvent evt = new ServerSentEvent();
+          evt.Type = "lineup";
+          string jsonMsg = JsonSerializer.Serialize(lineup);
+          evt.Data = new List<string>(new string[] { jsonMsg });
+          await _sseService.SendEventAsync(evt);
+          return NoContent();
         }
 
         // Sponsors  table management. Basic CRUD operations

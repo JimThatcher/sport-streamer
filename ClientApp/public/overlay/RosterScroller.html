@@ -49,7 +49,7 @@ SOFTWARE.
             top: 1002px; 
             left: 0px; 
             height: 62px;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
         }
 
         .scroll {
@@ -62,7 +62,7 @@ SOFTWARE.
 
         .scroll-content {
             overflow: visible;
-            animation: my-animation 50s linear infinite running;
+            animation: my-animation 80s linear infinite running;
             transform: translateX(100%);
             left: 0px; 
             width: 1920; 
@@ -74,13 +74,21 @@ SOFTWARE.
         .scroll-text {
             /* animation properties */
             white-space: nowrap;
-            font-size: 48px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: white;
+            font-size: 36px;
+            font-family: 'MySaira', Tahoma, Geneva, Verdana, sans-serif;
             display: inline-flex;
             display: inline-box;
-            transition: all 0.5s ease;
+            transition: all 0.9s ease;
             margin-bottom: 5px;
+        }
+        .red-text {
+            color: rgb(252, 140, 158);
+        }
+        .white-text {
+            color: white;
+        }
+        .blue-text {
+            color: rgb(129, 202, 226);
         }
 
         /* for Chrome */
@@ -99,8 +107,6 @@ SOFTWARE.
                 transform: translateX(-50);
             }
         }
-        
-
       </style>
 </head>
 <title>Roster Scroller</title>
@@ -109,18 +115,15 @@ SOFTWARE.
         <div style="position: absolute; top: 0px; left: 0px; width: 1920; height: 1080px;">
             <div class="scroll-container">
                 <div class="scroll">
-                    <div class="scroll-content">
-                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-                        <div class="scroll-text" id="scroll-text1"></div>
-                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-                        <!-- div class="scroll-text" id="scroll-text2">This is scrolling text.</div -->
+                    <div id="scroll-panel" class="scroll-content">
+                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <div class="scroll-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
                     </div>
                 </div>
             </div>
@@ -128,6 +131,12 @@ SOFTWARE.
     </div>
     <script>
         var rosterText = '';
+        var sairaFont = new FontFace('MySaira', 'url(../fonts/SairaCondensed-Medium.ttf)');
+
+        sairaFont.load().then(function(font) {
+            // console.log('Saira font ready');
+            document.fonts.add(font);
+        });
 
         function showRoster() {
             document.body.classList.remove('hide');
@@ -161,15 +170,44 @@ SOFTWARE.
                 return response.json();
             })
             .then(function (data) {
-                // console.log(data);
-                for (var i = 0; i < data.length; i++) {
-                    rosterText += data[i].jersey + '-' + data[i].name + ' (' + data[i].position + '), ';
+                var element = document.getElementById("scroll-panel");
+                element.style.animationDuration = data.length * 3 + 's';
+                if (teamToShow == 'Varsity') {
+                    var rosterText = '[Senior]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+                    var legendElement = document.createElement('div');
+                    legendElement.classList.add('scroll-text');
+                    legendElement.classList.add('red-text');
+                    legendElement.innerHTML = rosterText;
+                    element.appendChild(legendElement);
+                    rosterText = '[Junior]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+                    legendElement = document.createElement('div');
+                    legendElement.classList.add('scroll-text');
+                    legendElement.classList.add('white-text');
+                    legendElement.innerHTML = rosterText;
+                    element.appendChild(legendElement);
+                    rosterText = '[Sophomore]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+                    legendElement = document.createElement('div');
+                    legendElement.classList.add('scroll-text');
+                    legendElement.classList.add('blue-text');
+                    legendElement.innerHTML = rosterText;
+                    element.appendChild(legendElement);
                 }
-                // Trim last comma from rosterText
-                rosterText = rosterText.slice(0, -2);
-                //rosterText = '                              ' + rosterText + '                       ';
-                document.getElementById('scroll-text1').innerHTML = rosterText;
-                // document.getElementById('scroll-text2').innerHTML = rosterText;
+                for (var i = 0; i < data.length; i++) {
+                    var tag = document.createElement("div");
+                    tag.classList.add("scroll-text");
+                    if (teamToShow == 'Varsity' && data[i].year == 12) {
+                        tag.classList.add("red-text");
+                    } else if (teamToShow == 'Varsity' && data[i].year == 10) {
+                        tag.classList.add("blue-text");
+                    } else {
+                        tag.classList.add("white-text");
+                    }
+                    tag.innerHTML = "&nbsp;" + data[i].jersey + '-' + data[i].name + ' (' + data[i].position + ')';
+                    if (i < data.length - 1) {
+                        tag.innerHTML += ',&nbsp;';
+                    }
+                    element.appendChild(tag);
+                }
             })
             .catch(function (err) {
                 console.log('error: ' + err);

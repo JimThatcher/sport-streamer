@@ -39,6 +39,19 @@ SOFTWARE.
             transition-duration: 0.8s;
             transition-property: opacity;
         }
+        .hidden {
+            opacity: 0;
+        }
+        .hide {
+            opacity: 0;
+            transition-duration: 0.9s;
+            transition-property: opacity;
+        }
+        .show {
+            opacity: 1;
+            transition-duration: 0.8s;
+            transition-property: opacity;
+        }
     </style>
 </head>
 <title>Scoreboard</title>
@@ -53,10 +66,15 @@ SOFTWARE.
         <div style="position: absolute; top: 940px; left: 475px; width: 1120px; height: 80px;">
             <canvas id="scoreCanvas" width="1120" height="80" style="border:1px solid #00000000;"></canvas>
         </div>
+        <div id="tdDiv" class="hidden" style="position: absolute; top: 854px; left: 554px; width: 719px; height: 87px;">
+            <canvas id="tdCanvas" width="719" height="87" style="border:0px solid #00000000;"></canvas>
+        </div>
     </div>
 
     <script>
         // Variables for layout 30, 2, 819, 75
+        var tdX = 0;
+        var tdY = 0;
         var bugHeight = 75;
         var bgX = 30;
         var bgY = 2;
@@ -133,6 +151,27 @@ SOFTWARE.
                 console.log('error: ' + err);
             })
         };
+
+        function showTouchdown() {
+            var c = document.getElementById("tdCanvas");
+            var ctx = c.getContext("2d");
+            ctx.clearRect(0, 0, 719, 87);
+            ctx.fillStyle = "yellow";
+            ctx.fillRect(0, 0, 719, 87);
+            ctx.font = "italic 75pt Segoe UI Semibold";
+            ctx.fillStyle = "black";
+            ctx.fillText("TOUCHDOWN!", (719/2) - (ctx.measureText("TOUCHDOWN!").width/2), 80);
+            c = document.getElementById("tdDiv");
+            c.classList.remove('hidden');
+            c.classList.remove('hide');
+            c.classList.add('show');
+        }
+
+        function hideTouchdown() {
+            var c = document.getElementById("tdDiv");
+            c.classList.remove('show');
+            c.classList.add('hide');
+        }
 
         function throwFlag(flag) {
             var c = document.getElementById("flagCanvas");
@@ -382,6 +421,7 @@ SOFTWARE.
         }
         setupScoreboard();
         setupGame();
+        // showTouchdown();
         if (!!window.EventSource) {
             var source = new EventSource('../events');
             source.addEventListener('open', function(e) {
@@ -454,6 +494,16 @@ SOFTWARE.
                     case 7:
                         hideClock = false;
                         hideDnD = false;
+                        break;
+                    case 8:
+                        showTouchdown();
+                        var interval = setInterval(() => {
+                            hideTouchdown();
+                            clearInterval(interval);
+                        }, 5000);
+                        break;
+                    case 9:
+                        hideTouchdown();
                         break;
                 }
             }, false);
