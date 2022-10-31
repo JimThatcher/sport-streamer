@@ -103,6 +103,7 @@ namespace DakAccess
         // private string _scoreJson;
         // Timer for managing manual clock updates when no console is connected.
         private Timer? _clockTimer = null;
+        private long _lastClockValue = 0;
 
         public ConsoleData(ILogger<ConsoleData> logger, IServiceScopeFactory scopeFactory, IServerSentEventsService serverSentEventsService) {
             _scopeFactory = scopeFactory;
@@ -122,7 +123,9 @@ namespace DakAccess
             _logger.LogInformation("SSE Client connected: " + request.Host + request.Path);
             ServerSentEvent evt = new ServerSentEvent();
             evt.Type = "clock";
-            evt.Data = new List<string>(new string[] {GetClockFromDatabase()});
+            ClockData cd = GetClockFromDatabase();
+            _lastClockValue = cd.Clk / 100; // Convert to tenths of seconds
+            evt.Data = new List<string>(new string[] {cd.asJson()});
             _logger.LogInformation("Sending clock: " + evt.Data[0]);
             await client.SendEventAsync(evt);
             evt.Type = "score";
@@ -140,9 +143,9 @@ namespace DakAccess
         // Methods to manage the clock timer. These will be called from the ConsoleController.
         public void StartClockTimer() {
             if (_clockTimer == null) {
-                _clockTimer = new Timer(ManualClockTimer_Tick, null, 0, 1000);
+                _clockTimer = new Timer(ManualClockTimer_Tick, null, 0, 100);
             } else {
-                _clockTimer.Change(0, 1000);
+                _clockTimer.Change(0, 100);
             }
         }
         public void StopClockTimer() {
@@ -154,15 +157,26 @@ namespace DakAccess
             // Check if we have a console connected. There is no reason to post manual clock SSE updates
             // if we have a console connected.
             if (!_ConnectedToConsole) {
-                // We have a clock update. Send it to the client.
-                ServerSentEvent evt = new ServerSentEvent();
-                evt.Type = "clock";
-                evt.Data = new List<string>(new string[] {GetClockFromDatabase()});
-                await _sseService.SendEventAsync(evt);
+                ClockData cd = GetClockFromDatabase();
+                if (_lastClockValue == 0 && cd.Clk > 0) {
+                    _lastClockValue = (cd.Clk / 100) + 10; // Convert to tenths of seconds
+                }
+                // Now check if the clock value has changed. Our clock is in tenths of seconds, but we only
+                // send updates to the web client when the clock value changes by a second until we are 
+                // inside the last minute of a quarter, then we send updates on each tick.
+                if (cd.Clk > 0 && (cd.Clk < 60000 || (cd.Clk / 100) <= _lastClockValue - 10)) {
+                    // We have a clock update. Send it to the client.
+                    _lastClockValue = cd.Clk / 100;
+                    ServerSentEvent evt = new ServerSentEvent();
+                    evt.Type = "clock";
+                    evt.Data = new List<string>(new string[] {cd.asJson()});
+                    // _logger.LogInformation("Sending clock: " + evt.Data[0]);
+                    await _sseService.SendEventAsync(evt);
+                }
             }
         }
 
-        private string GetClockFromDatabase() {
+        private ClockData GetClockFromDatabase() {
             using (var scope = _scopeFactory.CreateScope()) {
                 var dbContext = scope.ServiceProvider.GetRequiredService<GameContext>();
                 if (dbContext.Clocks == null) {
@@ -171,7 +185,7 @@ namespace DakAccess
                     newClock.Pck = 20000;
                     newClock.isRunning = false;
                     newClock.lastChange = DateTime.UtcNow;
-                    return newClock.asJson();
+                    return newClock;
                 }
                 ClockData? clockData = dbContext.Clocks.Find((long) 1);
 
@@ -185,7 +199,7 @@ namespace DakAccess
                     dbContext.Clocks.Add(clockData);
                     dbContext.SaveChanges();
                 }
-                return clockData.asJson();
+                return clockData;
             }
         }
 
@@ -507,24 +521,23 @@ namespace DakAccess
                                             if (nOffset > 0 || updateText.Length > 32)
                                                 _logger.LogInformation(String.Format("Dak Update: {0}, Clock updated: {1}, Score updated: {2}", updateText, dakData.ClockUpdated(), dakData.DataUpdated() ));
                                             if (dakData.ClockUpdated()) {
-                                                // _clockJson = dakData.GetClocks(ref allData);
-                                                string _clock = JsonSerializer.Serialize(dakData.GetClockData());
+                                                ClockData clock = dakData.GetClockData();
+                                                string _clock = JsonSerializer.Serialize(clock);
                                                 if (dbContext != null && dbContext.Clocks != null) {
                                                     if (dbContext.Clocks.Count() == 0) {
-                                                        dbContext.Clocks.Add(dakData.GetClockData());
+                                                        dbContext.Clocks.Add(clock);
                                                     } else {
-                                                        dbContext.Clocks.Update(dakData.GetClockData());
+                                                        dbContext.Clocks.Update(clock);
                                                     }
                                                     dbContext.SaveChanges();
                                                 }
                                                 ServerSentEvent evt = new ServerSentEvent();
                                                 evt.Type = "clock";
-                                                evt.Data = new List<string>(new string[] {dakData.GetClockData().asJson()});
+                                                evt.Data = new List<string>(new string[] {clock.asJson()});
                                                 await _sseService.SendEventAsync(evt);
                                                 _logger.LogTrace(_clock);
                                             }
                                             if (dakData.DataUpdated()) {
-                                                // _scoreJson = dakData.GetData(ref allData);
                                                 string _score = JsonSerializer.Serialize(dakData.GetScoreData());
                                                 if (dbContext != null && dbContext.ScoreboardData != null) {
                                                     if (dbContext.ScoreboardData.Count() == 0) {

@@ -457,13 +457,12 @@ SOFTWARE.
                 var clockJson = JSON.parse(e.data);
                 if (clockJson["Clk"]) {
                     var periodLoc = clockJson["Clk"].lastIndexOf(".");
-                    var resultStr = "";
+                    var resultStr = clockJson["Clk"].trim();
+                    /*
                     if (periodLoc > 1) {
                         resultStr = clockJson["Clk"].substring(0, periodLoc).trim();
                     }
-                    else {
-                        resultStr = clockJson["Clk"].trim();
-                    }
+                    */
                     clock(resultStr);
                 }
             }, false);

@@ -54,8 +54,9 @@ namespace WebAPI.Models
         public bool isRunning { get; set; }
         public DateTime lastChange { get; set; }
         public string asJson() {
-            string clockStr = (Clk > 60000) ? string.Format("{0}:{1:00}", (int) Clk / 60000, ((Clk % 60000) / 1000)) :
-                    string.Format("{0}", ((Clk % 60000) / 1000));
+            long clockNow = Clk / 100; // 1/10th of a second
+            string clockStr = (clockNow >= 600) ? string.Format("{0}:{1:00}", (int) clockNow / 600, ((clockNow % 600) / 10)) :
+                    string.Format("{0:0.0}", ((clockNow % 600) / 10.0));
             string playClockStr = string.Format("{0}", Pck / 1000);
             return "{\"id\":" + Id + ",\"Clk\":\"" + clockStr + "\",\"Pck\":\"" + playClockStr + "\",\"isRunning\":" + ((isRunning) ? "true" : "false") + "}";
         }
@@ -66,7 +67,7 @@ namespace WebAPI.Models
         public ClockDataDak(ClockData data) {
             Id = data.Id;
             isRunning = data.isRunning;
-            Clk = (data.Clk > 60000) ? string.Format("{0}:{1:00}", (int) data.Clk / 60000, ((data.Clk % 60000) / 1000)) :
+            Clk = (data.Clk >= 60000) ? string.Format("{0}:{1:00}", (int) data.Clk / 60000, ((data.Clk % 60000) / 1000)) :
                     string.Format("{0}", ((data.Clk % 60000) / 1000));
             Pck = string.Format("{0}", data.Pck / 1000);
         }

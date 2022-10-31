@@ -105,15 +105,23 @@ namespace DakAccess
         public bool TeamsUpdated() { return _teamsUpdated; }
         public virtual ClockData GetClockData() {
             ClockData _clock = new ClockData();
-            try {
-                _clock.Clk = (long) TimeSpan.Parse("0:" + MainClock).TotalSeconds * 1000;
+            if (!MainClock.Contains(':')) { // Handle clock values less than 1 minute
+                try {
+                    _clock.Clk = (long) TimeSpan.Parse("0:00:" + MainClock).TotalMilliseconds;
+                }
+                catch (Exception) {}
+            }
+            else { // Handle clock values greater than 1 minute
+                try {
+                    _clock.Clk = (long) TimeSpan.Parse("0:" + MainClock).TotalMilliseconds;
 
-            } catch (Exception) {}
+                } catch (Exception) {}
+            }
             try {
                 _clock.Pck = (long) TimeSpan.Parse("0:00:" + PlayClock).TotalMilliseconds;
             } catch (Exception) {}
             _clock.Id = 1;
-            _clock.isRunning = ClockIsRunning;
+            _clock.isRunning = false; // ClockIsRunning;
             _clock.lastChange = DateTime.UtcNow;
             _clkUpdated = false;
             return _clock;
