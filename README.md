@@ -13,7 +13,7 @@ This is a very early release of a system for providing HTML/JavaScript-based gra
 
 The web server is built on ASP.NET Core, using Entity Framework to access the database. It provides a set of REST APIs for reading and updating the database and managing an in-memory database that holds game-time data for the clock and scoreboard (that data doesn't need to be saved after the game ends).
 The front-end web app is built from the base web app in rjwats' esp8266-react project (https://github.com/rjwats/esp8266-react).
-The graphic overlay pages ar basic HTML/JavaScript using server-sent-events to keep the display up-to-date with changes on the web server.
+The graphic overlay pages are basic HTML/JavaScript using server-sent-events to keep the display up-to-date with changes on the web server.
 The Stream Deck plugin is based on the Stream Deck Plugin Template project (https://github.com/elgatosf/streamdeck-plugintemplate) provided by Elgato.
 There is a very good chance that I've grabbed ideas and code for other parts of the system from some projects I haven't mentioned. Thank you to each of the developers of those projects. 
 
