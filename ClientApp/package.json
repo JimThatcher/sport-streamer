@@ -6,6 +6,7 @@
     "@emotion/react": "^11.10.0",
     "@emotion/styled": "^11.10.0",
     "@mui/icons-material": "^5.8.4",
+    "@mui/x-date-pickers": "^6.6.0",
     "@types/lodash": "^4.14.182",
     "@types/node": "^18.7.2",
     "@types/react": "^18.0.17",
