@@ -16,6 +16,8 @@ import { GameContext } from './SchoolContext';
 import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 
+import { DatePicker } from '@mui/x-date-pickers';
+
 const GameSetupForm: FC<SchoolsList> = ({schools}) => {
   const { selectedGame, selectGame } = useContext(GameContext);
   const [initialized, setInitialized] = useState(false);
@@ -217,7 +219,7 @@ useEffect(() => {
         <TextField
           inputRef={gameDateTime}
           name="gameDate"
-          label="Game Date (YYYY-MM-DD)"
+          label="Game Date [DO NOT USE]"
           value={date}
           onChange={(newValue) => {
             changeDate(newValue);
@@ -225,6 +227,7 @@ useEffect(() => {
           margin="normal"
         >
         </TextField>
+        <DatePicker />
         <ButtonRow mt={1}>
           <Button startIcon={<CancelIcon />} disabled={saving} variant="contained" color="primary" type="button" onClick={goBack}>
             Cancel

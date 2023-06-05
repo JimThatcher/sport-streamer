@@ -17,6 +17,8 @@ import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { now } from 'lodash';
 
+import { DatePicker } from '@mui/x-date-pickers';
+
 const GameAddForm: FC<SchoolsList> = ({schools}) => {
   const homeTeamField = useRef<TextFieldProps>(null);
   const awayTeamField = useRef<TextFieldProps>(null);
@@ -142,7 +144,7 @@ const GameAddForm: FC<SchoolsList> = ({schools}) => {
         <TextField
           inputRef={gameDateTime}
           name="gameDate"
-          label="Game Date (YYYY-MM-DD)"
+          label="Game Date [REPLACE ME]"
           value={data.date}
           onChange={(newValue) => {
             changeDate(newValue);
@@ -150,6 +152,7 @@ const GameAddForm: FC<SchoolsList> = ({schools}) => {
         margin="normal"
         >
         </TextField>
+        <DatePicker />
         <ButtonRow mt={1}>
           <Button startIcon={<CancelIcon />} disabled={saving} variant="contained" color="primary" type="button" onClick={goBack}>
             Cancel
