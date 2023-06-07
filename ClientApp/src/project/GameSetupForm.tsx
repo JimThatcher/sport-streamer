@@ -227,7 +227,13 @@ useEffect(() => {
           margin="normal"
         >
         </TextField>
-        <DatePicker />
+        <DatePicker 
+          label="Game Date"
+          value={date}
+          onChange={(newValue) => {
+            changeDate(newValue);
+          }}
+        />
         <ButtonRow mt={1}>
           <Button startIcon={<CancelIcon />} disabled={saving} variant="contained" color="primary" type="button" onClick={goBack}>
             Cancel
